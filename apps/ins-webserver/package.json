@@ -1,0 +1,74 @@
+{
+  "name": "ins-webserver",
+  "version": "0.1.0",
+  "description": "Serverless NestJS server for InsecurAzon",
+  "private": true,
+  "scripts": {
+    "build": "nest build",
+    "format": "prettier --write \"src/**/*.ts\"",
+    "start": "nest start",
+    "dev": "nest start --watch",
+    "start:dev": "nest start --watch",
+    "start:debug": "nest start --debug --watch",
+    "start:prod": "node dist/main",
+    "lint": "eslint \"{src,apps,libs,test}/**/*.ts\" --fix",
+    "test": "jest",
+    "test:watch": "jest --watch",
+    "test:cov": "jest --coverage",
+    "serverless:package": "serverless package",
+    "serverless:deploy": "serverless deploy"
+  },
+  "dependencies": {
+    "@nestjs/common": "^9.3.9",
+    "@nestjs/core": "^9.3.9",
+    "@nestjs/platform-express": "^9.3.9",
+    "@vendia/serverless-express": "^4.10.4",
+    "aws-lambda": "^1.0.7",
+    "axios": "^1.6.7",
+    "express": "^4.18.2",
+    "reflect-metadata": "^0.1.13",
+    "rxjs": "^7.8.1",
+    "serverless-http": "^3.1.1"
+  },
+  "devDependencies": {
+    "@nestjs/cli": "^9.3.0",
+    "@nestjs/schematics": "^9.1.0",
+    "@nestjs/testing": "^9.3.9",
+    "@types/aws-lambda": "^8.10.119",
+    "@types/express": "^4.17.17",
+    "@types/jest": "^29.5.0",
+    "@types/node": "^18.15.11",
+    "@typescript-eslint/eslint-plugin": "^5.58.0",
+    "@typescript-eslint/parser": "^5.58.0",
+    "eslint": "^8.38.0",
+    "eslint-config-prettier": "^8.8.0",
+    "eslint-plugin-prettier": "^4.2.1",
+    "jest": "^29.5.0",
+    "prettier": "^2.8.7",
+    "serverless": "^3.30.1",
+    "serverless-offline": "^12.0.4",
+    "source-map-support": "^0.5.21",
+    "ts-jest": "^29.1.0",
+    "ts-loader": "^9.4.2",
+    "ts-node": "^10.9.1",
+    "tsconfig-paths": "^4.2.0",
+    "typescript": "^5.0.4"
+  },
+  "jest": {
+    "moduleFileExtensions": [
+      "js",
+      "json",
+      "ts"
+    ],
+    "rootDir": "src",
+    "testRegex": ".*\\.spec\\.ts$",
+    "transform": {
+      "^.+\\.(t|j)s$": "ts-jest"
+    },
+    "collectCoverageFrom": [
+      "**/*.(t|j)s"
+    ],
+    "coverageDirectory": "../coverage",
+    "testEnvironment": "node"
+  }
+} 
