@@ -1,0 +1,92 @@
+# variable "eks_config" {
+#   description = "EKS configuration"
+#   type = object({
+#     cluster_name = string
+#     cluster_version = string
+#     cluster_role_arn = string
+#     vpc_id = string
+#     subnet_ids = list(string)
+#     cluster_encryption_config = list(object({
+#       provider_key_arn = string
+#       resources = list(string)
+#     }))
+#     access = object({
+#       private = bool
+#       public = bool
+#       cidrs = list(string)
+#     })
+#     log_types = list(string)
+#     cloudwatch = object({
+#       enabled = bool
+#       retention_in_days = number
+#     })
+#     node_groups = map(object({
+#       name = string
+#       instance_types = list(string)
+#       ami_type = string
+#       capacity_type = string
+#       disk_size = number
+#       min_size = number
+#       max_size = number
+#       desired_size = number
+#       subnet_ids = list(string)
+#       labels = map(string)
+#       taints = list(map(string))
+#     }))
+#     node_role_arn = string
+#     fargate_profiles = map(object({
+#       name = string
+#       subnet_ids = list(string)
+#       selectors = list(object({
+#         namespace = string
+#         labels = map(string)
+#       }))
+#     }))
+#     fargate_pod_execution_role_arn = string
+#     tags = map(string)
+#   })
+#   default = {
+#     cluster_name = "eks-cluster"
+#     cluster_encryption_config = []
+#     access = {
+#       private = true
+#       public = false
+#       cidrs = ["0.0.0.0/0"]
+#     }
+#     cloudwatch = {
+#       enabled = false
+#     }
+#     fargate_profiles = {
+#       "default" = {
+#         name = "default"
+#         subnet_ids = ["subnet-123456789012", "subnet-123456789013"]
+#         selectors = [
+#           {
+#             namespace = "default"
+#             labels = {
+#               "app" = "default"
+#             }
+#           }
+#         ]
+#       }
+#     }
+#   }
+# }
+
+# locals {
+#   eks_config = {
+#     cluster_name = "eks-cluster"
+#     cluster_version = "1.32"
+#     vpc_id = module.network.main.vpc_config.vpc_id
+#     subnet_ids = [ module.network.main.vpc_config.subnet.main-internal.id ]
+#     access = {
+#       private = true
+#       public = false
+#     }
+#     log_types = ["api", "audit", "authenticator", "controllerManager", "scheduler"]
+#     cloudwatch = {
+#       enabled = false
+#     }
+    
+#   }
+# }
