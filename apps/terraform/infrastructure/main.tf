@@ -24,10 +24,17 @@ module "iam_config" {
   iam_eks = var.iam_eks
 }
 
-module "compute_config" {
+# module "compute_config" {
+#   module_depends_on = [ module.iam_config ]
+#   source = "./modules/compute"
+#   eks_config = local.eks_config
+# }
+
+module "storage_config" {
+  source = "./modules/storage"
+  static_website_config = local.static_website_config
+  region = var.region
   module_depends_on = [ module.iam_config ]
-  source = "./modules/compute"
-  eks_config = local.eks_config
 }
 
 output "network_config" {
@@ -38,7 +45,12 @@ output "iam_config" {
   value = module.iam_config
 }
 
-output "compute_config" {
-  value = module.compute_config
-  sensitive = true
+# output "compute_config" {
+#   value = module.compute_config
+#   sensitive = true
+# }
+
+
+output "storage_config" {
+  value = module.storage_config
 }
