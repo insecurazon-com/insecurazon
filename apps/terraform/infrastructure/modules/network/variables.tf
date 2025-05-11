@@ -14,6 +14,9 @@ variable "network_config" {
     vpc = map(object({
       vpc_cidr      = string
       vpc_name      = string
+      igw = object({
+        add_igw = bool
+      })
       s3_endpoint = object({
         add_endpoint       = bool
       })
@@ -28,6 +31,7 @@ variable "network_config" {
         private_dns_enabled = bool
       })
       subnets       = list(object({
+        public            = bool
         name              = string
         cidr              = string
         availability_zone = string

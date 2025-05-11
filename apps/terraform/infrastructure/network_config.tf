@@ -10,42 +10,8 @@ variable "domain_name" {
   default     = "platform.corp"
 }
 
-variable "network_config" {
-  description = "Map of network configurations"
-  type        = object({ 
-    vpc = map(object({
-      vpc_cidr      = string
-      vpc_name      = string
-      s3_endpoint = object({
-        add_endpoint       = bool
-      })
-      kms_endpoint = object({
-        add_endpoint = bool
-        vpc_endpoint_type   = string
-        private_dns_enabled = bool
-      })
-      secretsmanager_endpoint = object({
-        add_endpoint = bool
-        vpc_endpoint_type   = string
-        private_dns_enabled = bool
-      })
-      subnets       = list(object({
-        name              = string
-        cidr              = string
-        availability_zone = string
-        route_table_name  = string
-        add_route_table   = bool
-        allow_kms         = bool
-        allow_secretsmanager = bool
-      }))
-    }))
-    peering = map(object({
-      vpc_name = string
-      peer_vpc_name = string
-      tags = map(string)
-    }))
-  })
-  default = {
+locals {
+  network_config = {
     vpc = {
       egress = {
         vpc_cidr = "10.0.0.0/16"
@@ -63,22 +29,17 @@ variable "network_config" {
           vpc_endpoint_type   = "Interface"
           private_dns_enabled = true
         }
+        igw = {
+          add_igw = true
+        }
         subnets = [
           {
+            public            = true
             name              = "public"
             cidr              = "10.0.1.0/24"
             availability_zone = "eu-central-1a"
             route_table_name  = "public"
             add_route_table   = true
-            allow_kms         = false
-            allow_secretsmanager = false
-          },
-          {
-            name              = "private"
-            cidr              = "10.0.2.0/24"
-            availability_zone = "eu-central-1a"
-            route_table_name  = "private"
-            add_route_table   = false
             allow_kms         = false
             allow_secretsmanager = false
           }
@@ -100,21 +61,46 @@ variable "network_config" {
           vpc_endpoint_type   = "Interface"
           private_dns_enabled = true
         }
+        igw = {
+          add_igw = false
+        }
         subnets = [
           {
-            name              = "external"
+            public            = false
+            name              = "services-1"
             cidr              = "10.1.1.0/24"
             availability_zone = "eu-central-1a"
-            route_table_name  = "external"
-            add_route_table   = true
+            route_table_name  = "services-1"
+            add_route_table   = false
             allow_kms         = false
             allow_secretsmanager = false
           },
           {
-            name              = "internal"
+            public            = false
+            name              = "services-2"
             cidr              = "10.1.2.0/24"
+            availability_zone = "eu-central-1b"
+            route_table_name  = "services-2"
+            add_route_table   = false
+            allow_kms         = false
+            allow_secretsmanager = false
+          },
+          {
+            public            = false
+            name              = "control-plane-1"
+            cidr              = "10.1.3.0/24"
             availability_zone = "eu-central-1a"
-            route_table_name  = "internal"
+            route_table_name  = "control-plane-1"
+            add_route_table   = false
+            allow_kms         = false
+            allow_secretsmanager = false
+          },
+          {
+            public            = false
+            name              = "control-plane-2"
+            cidr              = "10.1.4.0/24"
+            availability_zone = "eu-central-1b"
+            route_table_name  = "control-plane-2"
             add_route_table   = false
             allow_kms         = false
             allow_secretsmanager = false

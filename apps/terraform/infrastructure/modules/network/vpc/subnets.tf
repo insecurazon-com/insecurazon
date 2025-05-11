@@ -19,7 +19,7 @@ resource "aws_route_table" "this" {
     for_each = each.value.add_route_table ? [1] : []
     content {
       cidr_block = "0.0.0.0/0"
-      gateway_id = aws_internet_gateway.this.id
+      gateway_id = each.value.public ? aws_internet_gateway.this.id : null
     }
   }
 
@@ -33,4 +33,3 @@ resource "aws_route_table_association" "this" {
   subnet_id = aws_subnet.this[each.key].id
   route_table_id = aws_route_table.this[each.value.route_table_name].id
 }
-

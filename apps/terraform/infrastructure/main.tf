@@ -15,9 +15,8 @@ module "network_config" {
   source = "./modules/network"
   region = var.region
   domain_name = var.domain_name
-  network_config = var.network_config
+  network_config = local.network_config
 }
-
 
 module "iam_config" {
   module_depends_on = [ module.network_config ]
@@ -25,16 +24,21 @@ module "iam_config" {
   iam_eks = var.iam_eks
 }
 
-# module "compute_config" {
-#   source = "./modules/compute"
-#   eks_config = var.eks_config
-# }
+module "compute_config" {
+  module_depends_on = [ module.iam_config ]
+  source = "./modules/compute"
+  eks_config = local.eks_config
+}
 
 output "network_config" {
   value = module.network_config
 }
 
 output "iam_config" {
-
   value = module.iam_config
+}
+
+output "compute_config" {
+  value = module.compute_config
+  sensitive = true
 }
