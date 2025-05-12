@@ -84,6 +84,17 @@ resource "aws_iam_role_policy" "github_actions_custom" {
           "ec2:CreateVpc",
           "ec2:DeleteVpc",
           "ec2:ModifyVpcAttribute",
+          "iam:GetRole",
+          "iam:ListRoles",
+          "iam:PassRole",
+          "iam:CreateRole",
+          "iam:DeleteRole",
+          "iam:AttachRolePolicy",
+          "iam:DetachRolePolicy",
+          "iam:PutRolePolicy",
+          "iam:GetRolePolicy",
+          "iam:DeleteRolePolicy",
+          "iam:TagRole"
         ]
         Resource = "*"
       },
