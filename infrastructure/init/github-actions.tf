@@ -80,6 +80,10 @@ resource "aws_iam_role_policy" "github_actions_custom" {
           "lambda:UpdateAlias",
           "eks:DescribeCluster",
           "eks:ListClusters",
+          "ec2:Describe*",
+          "ec2:CreateVpc",
+          "ec2:DeleteVpc",
+          "ec2:ModifyVpcAttribute",
         ]
         Resource = "*"
       },
