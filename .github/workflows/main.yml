@@ -47,15 +47,6 @@ jobs:
           cd infrastructure/terraform
           terraform init -backend-config="bucket=${TF_STATE_BUCKET}"
           terraform apply -auto-approve
-      
-      - name: Export Outputs
-        id: outputs
-        run: |
-          cd infrastructure/terraform
-          echo "cluster_name=$(terraform output -raw cluster_name)" >> $GITHUB_OUTPUT
-          echo "ecr_repo=$(terraform output -raw ecr_repository_url)" >> $GITHUB_OUTPUT
-          echo "s3_bucket=$(terraform output -raw s3_bucket_name)" >> $GITHUB_OUTPUT
-          echo "cloudfront_id=$(terraform output -raw cloudfront_distribution_id)" >> $GITHUB_OUTPUT
 
   # Job 2: Build Applications
   # build-apps:
