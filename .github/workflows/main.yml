@@ -7,6 +7,13 @@ permissions:
 on:
   push:
     branches: [master]
+  workflow_dispatch:
+    inputs:
+      deploy_infra:
+        description: 'Deploy infrastructure'
+        required: false
+        type: boolean
+        default: false
 
 env:
   TF_STATE_BUCKET: insecurazon-terraform-state-bucket
@@ -17,11 +24,13 @@ jobs:
   # Job 1: Deploy Infrastructure
   deploy-infrastructure:
     runs-on: ubuntu-24.04
-    outputs:
-      cluster_name: ${{ steps.outputs.outputs.cluster_name }}
-      ecr_repo: ${{ steps.outputs.outputs.ecr_repo }}
-      s3_bucket: ${{ steps.outputs.outputs.s3_bucket }}
-      cloudfront_id: ${{ steps.outputs.outputs.cloudfront_id }}
+    # Only run this job if explicitly triggered via workflow_dispatch with deploy_infra=true
+    if: github.event_name == 'workflow_dispatch' && github.event.inputs.deploy_infra == 'true'
+    # outputs:
+    #   cluster_name: ${{ steps.outputs.outputs.cluster_name }}
+    #   ecr_repo: ${{ steps.outputs.outputs.ecr_repo }}
+    #   s3_bucket: ${{ steps.outputs.outputs.s3_bucket }}
+    #   cloudfront_id: ${{ steps.outputs.outputs.cloudfront_id }}
     
     steps:
       - uses: aws-actions/configure-aws-credentials@v4
