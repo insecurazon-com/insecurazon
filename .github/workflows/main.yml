@@ -11,6 +11,7 @@ on:
 env:
   TF_STATE_BUCKET: insecurazon-terraform-state-bucket
   AWS_REGION: eu-central-1
+  DEPLOYMENT_ROLE_ARN: arn:aws:iam::767398092878:role/GitHubActions-DeploymentRole
 
 jobs:
   # Job 1: Deploy Infrastructure
@@ -25,7 +26,7 @@ jobs:
     steps:
       - uses: aws-actions/configure-aws-credentials@v4
         with:
-          role-to-assume: arn:aws:iam::123456789100:role/GitHubActionsRole
+          role-to-assume: ${{ env.DEPLOYMENT_ROLE_ARN }}
           aws-region: ${{ env.AWS_REGION }}
 
       - uses: actions/checkout@v4
