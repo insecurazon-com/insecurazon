@@ -11,7 +11,7 @@ on:
     inputs:
       deploy_infra:
         description: 'Deploy infrastructure'
-        required: true
+        required: false
         type: boolean
         default: false
 
