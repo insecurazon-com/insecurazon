@@ -29,7 +29,6 @@ variable "vpc_config" {
       add_endpoint        = bool
       private_dns_enabled = bool
       vpc_endpoint_type   = string
-      private_dns_enabled = bool
     })
     subnets       = list(object({
       public               = bool
