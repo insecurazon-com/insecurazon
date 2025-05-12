@@ -94,6 +94,7 @@ resource "aws_iam_role_policy" "github_actions_custom" {
           "iam:PutRolePolicy",
           "iam:GetRolePolicy",
           "iam:DeleteRolePolicy",
+          "iam:ListRolePolicies",
           "iam:TagRole"
         ]
         Resource = "*"
