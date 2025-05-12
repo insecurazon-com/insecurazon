@@ -74,7 +74,7 @@ resource "aws_iam_role_policy" "github_actions_custom" {
         Effect = "Allow"
         Action = [
           "s3:*",
-          "cloudfront:CreateInvalidation",
+          "cloudfront:*",
           "lambda:UpdateFunctionCode",
           "lambda:PublishVersion",
           "lambda:UpdateAlias",
