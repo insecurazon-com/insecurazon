@@ -1,0 +1,176 @@
+name: Deploy Pipeline
+
+on:
+  push:
+    branches: [main]
+
+env:
+  TF_STATE_BUCKET: my-terraform-state
+  AWS_REGION: us-east-1
+
+jobs:
+  # Job 1: Deploy Infrastructure
+  deploy-infrastructure:
+    runs-on: ubuntu-24.04
+    outputs:
+      cluster_name: ${{ steps.outputs.outputs.cluster_name }}
+      ecr_repo: ${{ steps.outputs.outputs.ecr_repo }}
+      s3_bucket: ${{ steps.outputs.outputs.s3_bucket }}
+      cloudfront_id: ${{ steps.outputs.outputs.cloudfront_id }}
+    
+    steps:
+      - uses: actions/checkout@v3
+      
+      - uses: hashicorp/setup-terraform@v2
+        with:
+          terraform_version: 1.5.0
+      
+      - uses: aws-actions/configure-aws-credentials@v2
+        with:
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          aws-region: ${{ env.AWS_REGION }}
+      
+      - name: Terraform Init & Apply
+        run: |
+          cd infrastructure/terraform
+          terraform init -backend-config="bucket=${TF_STATE_BUCKET}"
+          terraform apply -auto-approve
+      
+      - name: Export Outputs
+        id: outputs
+        run: |
+          cd infrastructure/terraform
+          echo "cluster_name=$(terraform output -raw cluster_name)" >> $GITHUB_OUTPUT
+          echo "ecr_repo=$(terraform output -raw ecr_repository_url)" >> $GITHUB_OUTPUT
+          echo "s3_bucket=$(terraform output -raw s3_bucket_name)" >> $GITHUB_OUTPUT
+          echo "cloudfront_id=$(terraform output -raw cloudfront_distribution_id)" >> $GITHUB_OUTPUT
+
+  # Job 2: Build Applications
+  # build-apps:
+  #   runs-on: ubuntu-24.04
+  #   needs: deploy-infrastructure
+  #   strategy:
+  #     matrix:
+  #       app: [opa-web, frontend-service, backend-services]
+    
+  #   steps:
+  #     - uses: actions/checkout@v3
+      
+  #     - uses: actions/setup-node@v3
+  #       with:
+  #         node-version: '18'
+  #         cache: 'npm'
+      
+  #     - name: Install Turbo
+  #       run: npm install -g turbo
+      
+  #     - name: Install Dependencies
+  #       run: npm ci
+      
+  #     - name: Build Application
+  #       run: turbo run build --filter=${{ matrix.app }}
+      
+  #     - name: Upload Build Artifacts
+  #       uses: actions/upload-artifact@v3
+  #       with:
+  #         name: ${{ matrix.app }}-build
+  #         path: apps/${{ matrix.app }}/dist/
+
+  # # Job 3: Deploy OPA to S3/CloudFront
+  # deploy-opa:
+  #   runs-on: ubuntu-24.04
+  #   needs: [deploy-infrastructure, build-apps]
+    
+  #   steps:
+  #     - uses: actions/checkout@v3
+      
+  #     - uses: aws-actions/configure-aws-credentials@v2
+  #       with:
+  #         aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+  #         aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+  #         aws-region: ${{ env.AWS_REGION }}
+      
+  #     - name: Download OPA Build
+  #       uses: actions/download-artifact@v3
+  #       with:
+  #         name: opa-web-build
+  #         path: apps/opa-web/dist/
+      
+  #     - name: Deploy to S3
+  #       run: |
+  #         aws s3 sync apps/opa-web/dist/ s3://${{ needs.deploy-infrastructure.outputs.s3_bucket }} --delete
+      
+  #     - name: Invalidate CloudFront
+  #       run: |
+  #         aws cloudfront create-invalidation \
+  #           --distribution-id ${{ needs.deploy-infrastructure.outputs.cloudfront_id }} \
+  #           --paths "/*"
+
+  # # Job 4: Deploy Frontend Lambda
+  # deploy-frontend:
+  #   runs-on: ubuntu-24.04
+  #   needs: [deploy-infrastructure, build-apps]
+    
+  #   steps:
+  #     - uses: actions/checkout@v3
+      
+  #     - uses: aws-actions/configure-aws-credentials@v2
+  #       with:
+  #         aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+  #         aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+  #         aws-region: ${{ env.AWS_REGION }}
+      
+  #     - name: Download Frontend Build
+  #       uses: actions/download-artifact@v3
+  #       with:
+  #         name: frontend-service-build
+  #         path: apps/frontend-service/dist/
+      
+  #     - name: Package and Deploy Lambda
+  #       run: |
+  #         cd apps/frontend-service/dist
+  #         zip -r function.zip .
+  #         aws lambda update-function-code \
+  #           --function-name ${{ needs.deploy-infrastructure.outputs.lambda_function_name }} \
+  #           --zip-file fileb://function.zip
+
+  # # Job 5: Deploy Backend to EKS
+  # deploy-backend:
+  #   runs-on: ubuntu-24.04
+  #   needs: [deploy-infrastructure, build-apps]
+    
+  #   steps:
+  #     - uses: actions/checkout@v3
+      
+  #     - uses: aws-actions/configure-aws-credentials@v2
+  #       with:
+  #         aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+  #         aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+  #         aws-region: ${{ env.AWS_REGION }}
+      
+  #     - name: Install kubectl
+  #       run: |
+  #         curl -LO "https://dl.k8s.io/release/v1.27.0/bin/linux/amd64/kubectl"
+  #         sudo install -o root -g root -m 0755 kubectl /usr/local/bin/kubectl
+      
+  #     - name: Configure kubectl
+  #       run: |
+  #         aws eks update-kubeconfig \
+  #           --region ${{ env.AWS_REGION }} \
+  #           --name ${{ needs.deploy-infrastructure.outputs.cluster_name }}
+      
+  #     - name: Login to ECR
+  #       uses: aws-actions/amazon-ecr-login@v1
+      
+  #     - name: Build and Push Docker Image
+  #       run: |
+  #         docker build -t ${{ needs.deploy-infrastructure.outputs.ecr_repo }}:${{ github.sha }} apps/backend-services
+  #         docker push ${{ needs.deploy-infrastructure.outputs.ecr_repo }}:${{ github.sha }}
+      
+  #     - name: Deploy to Kubernetes
+  #       run: |
+  #         kubectl apply -f k8s/deployment.yaml
+  #         kubectl set image deployment/backend \
+  #           backend=${{ needs.deploy-infrastructure.outputs.ecr_repo }}:${{ github.sha }}
+  #         kubectl rollout status deployment/backend
