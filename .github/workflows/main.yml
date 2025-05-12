@@ -6,11 +6,11 @@ permissions:
 
 on:
   push:
-    branches: [main]
+    branches: [master]
 
 env:
-  TF_STATE_BUCKET: my-terraform-state
-  AWS_REGION: us-east-1
+  TF_STATE_BUCKET: insecurazon-terraform-state-bucket
+  AWS_REGION: eu-central-1
 
 jobs:
   # Job 1: Deploy Infrastructure
