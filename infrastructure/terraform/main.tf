@@ -5,6 +5,12 @@ terraform {
       version = "~> 5.0"
     }
   }
+  backend "s3" {
+    bucket         = "insecurazon-terraform-state-bucket"
+    key            = "path/to/your/terraform.tfstate"
+    region         = "eu-central-1"
+    encrypt        = true
+  }
 }
 
 provider "aws" {
