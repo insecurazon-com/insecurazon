@@ -74,9 +74,7 @@ resource "aws_iam_role_policy" "github_actions_custom" {
         Action = [
           "s3:*",
           "cloudfront:*",
-          "lambda:UpdateFunctionCode",
-          "lambda:PublishVersion",
-          "lambda:UpdateAlias",
+          "lambda:*",
           "eks:DescribeCluster",
           "eks:ListClusters",
           # EC2 permissions
