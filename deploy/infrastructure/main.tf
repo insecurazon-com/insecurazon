@@ -30,11 +30,12 @@ module "iam_config" {
   iam_eks = var.iam_eks
 }
 
-# module "compute_config" {
-#   module_depends_on = [ module.iam_config ]
-#   source = "./modules/compute"
-#   eks_config = local.eks_config
-# }
+module "compute_config" {
+  module_depends_on = [ module.iam_config ]
+  source = "./modules/compute"
+  eks_config = local.eks_config
+  lambda_config = local.lambda_config
+}
 
 module "storage_config" {
   source = "./modules/storage"
@@ -51,10 +52,10 @@ output "iam_config" {
   value = module.iam_config
 }
 
-# output "compute_config" {
-#   value = module.compute_config
-#   sensitive = true
-# }
+output "compute_config" {
+  value = module.compute_config
+  sensitive = true
+}
 
 
 output "storage_config" {

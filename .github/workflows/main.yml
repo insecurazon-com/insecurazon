@@ -29,6 +29,7 @@ jobs:
     outputs:
       s3_bucket: ${{ steps.terraform_outputs.outputs.s3_bucket }}
       cloudfront_id: ${{ steps.terraform_outputs.outputs.cloudfront_id }}
+      lambda_function_name: ${{ steps.terraform_outputs.outputs.lambda_function_name }}
     
     steps:
       - uses: aws-actions/configure-aws-credentials@v4
@@ -52,6 +53,7 @@ jobs:
           cd deploy/infrastructure
           echo "s3_bucket=$(terraform output -json storage_config | jq -r '.static_website_config.bucket_name')" >> $GITHUB_OUTPUT
           echo "cloudfront_id=$(terraform output -json storage_config | jq -r '.static_website_config.cloudfront_id')" >> $GITHUB_OUTPUT
+          echo "lambda_function_name=$(terraform output -json compute_config | jq -r '.lambda_config.lambda_function_name')" >> $GITHUB_OUTPUT
 
   # Job 2: Build Applications
   build-apps:
@@ -60,7 +62,7 @@ jobs:
     if: always() && (needs.deploy-infrastructure.result == 'success' || needs.deploy-infrastructure.result == 'skipped')
     strategy:
       matrix:
-        app: [ins-webfe]
+        app: [ins-webfe, ins-webserver]
     
     steps:
       - uses: actions/checkout@v4
@@ -117,3 +119,28 @@ jobs:
           aws cloudfront create-invalidation \
             --distribution-id ${{ needs.deploy-infrastructure.outputs.cloudfront_id }} \
             --paths "/*"
+
+  # Job 4: Deploy ins-webserver to Lambda
+  deploy-ins-webserver:
+    runs-on: ubuntu-24.04
+    needs: [deploy-infrastructure, build-apps]
+    if: always() && needs.build-apps.result == 'success'
+    
+    steps:
+      - uses: actions/checkout@v4
+      
+      - uses: aws-actions/configure-aws-credentials@v4
+        with:
+          role-to-assume: ${{ env.DEPLOYMENT_ROLE_ARN }}
+          aws-region: ${{ env.AWS_REGION }}
+      
+      - name: Download ins-webserver Build
+        uses: actions/download-artifact@v4
+        with:
+          name: ins-webserver-build
+          path: apps/ins-webserver/dist/
+      
+      - name: Deploy to Lambda
+        run: |
+          chmod +x deploy/application/ins-webserver/deploy.sh
+          ./deploy/application/ins-webserver/deploy.sh
