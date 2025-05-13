@@ -80,34 +80,7 @@ resource "aws_iam_role_policy" "github_actions_custom" {
           "eks:DescribeCluster",
           "eks:ListClusters",
           # EC2 permissions
-          "ec2:Describe*",
-          "ec2:CreateVpc",
-          "ec2:DeleteVpc", 
-          "ec2:ModifyVpcAttribute",
-          "ec2:CreateDhcpOptions",
-          "ec2:DeleteDhcpOptions",
-          "ec2:AssociateDhcpOptions",
-          "ec2:CreateInternetGateway",
-          "ec2:DeleteInternetGateway",
-          "ec2:AttachInternetGateway",
-          "ec2:DetachInternetGateway",
-          "ec2:CreateSubnet",
-          "ec2:DeleteSubnet",
-          "ec2:ModifySubnetAttribute",
-          "ec2:CreateRoute",
-          "ec2:CreateRouteTable",
-          "ec2:DeleteRouteTable",
-          "ec2:DeleteRoute",
-          "ec2:AssociateRouteTable",
-          "ec2:DisassociateRouteTable",
-          "ec2:CreateSecurityGroup",
-          "ec2:DeleteSecurityGroup",
-          "ec2:AuthorizeSecurityGroupIngress",
-          "ec2:AuthorizeSecurityGroupEgress",
-          "ec2:RevokeSecurityGroupIngress",
-          "ec2:RevokeSecurityGroupEgress",
-          "ec2:CreateTags",
-          "ec2:DeleteTags",
+          "ec2:*",
           # IAM permissions
           "iam:GetRole",
           "iam:ListRoles",
@@ -135,14 +108,3 @@ resource "aws_iam_role_policy" "github_actions_custom" {
     ]
   })
 }
-
-# Output the role ARN for GitHub Actions
-output "github_actions_role_arn" {
-  value = aws_iam_role.github_actions.arn
-}
-
-variable "terraform_state_bucket" {
-  description = "The S3 bucket used to store Terraform state"
-  type        = string
-  default     = "insecurazon-terraform-state-bucket"
-} 
