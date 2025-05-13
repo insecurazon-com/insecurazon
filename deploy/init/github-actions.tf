@@ -94,7 +94,11 @@ resource "aws_iam_role_policy" "github_actions_custom" {
           "iam:DeleteRolePolicy",
           "iam:ListRolePolicies",
           "iam:ListAttachedRolePolicies",
-          "iam:TagRole"
+          "iam:TagRole",
+          # API Gateway permissions
+          "apigateway:*",
+          # CloudWatch Logs permissions
+          "logs:*"
         ]
         Resource = "*"
       },
