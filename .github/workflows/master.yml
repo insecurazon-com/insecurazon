@@ -36,6 +36,7 @@ jobs:
         id: terraform_outputs
         run: |
           cd deploy/infrastructure
+          terraform init -backend-config="bucket=${TF_STATE_BUCKET}"
           echo "s3_bucket=$(terraform output -json storage_config | jq -r '.static_website_config.bucket_name')" >> $GITHUB_OUTPUT
           echo "cloudfront_id=$(terraform output -json storage_config | jq -r '.static_website_config.cloudfront_id')" >> $GITHUB_OUTPUT
           echo "lambda_function_name=$(terraform output -json compute_config | jq -r '.lambda_config.lambda_function_name')" >> $GITHUB_OUTPUT
