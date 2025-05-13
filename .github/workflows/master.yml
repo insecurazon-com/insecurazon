@@ -1,4 +1,4 @@
-name: Deploy Pipeline
+name: Build & Deploy Pipeline
 
 permissions:
   id-token: write
@@ -7,13 +7,6 @@ permissions:
 on:
   push:
     branches: [master]
-  workflow_dispatch:
-    inputs:
-      deploy_infra:
-        description: 'Deploy infrastructure'
-        required: false
-        type: boolean
-        default: false
 
 env:
   TF_STATE_BUCKET: insecurazon-terraform-state-bucket
@@ -21,11 +14,9 @@ env:
   DEPLOYMENT_ROLE_ARN: arn:aws:iam::767398092878:role/GitHubActions-DeploymentRole
 
 jobs:
-  # Job 1: Deploy Infrastructure
-  deploy-infrastructure:
+  # Job 1: Get Infrastructure Info
+  infrastructure-info:
     runs-on: ubuntu-24.04
-    # Only run this job if explicitly triggered via workflow_dispatch with deploy_infra=true
-    # if: github.event_name == 'workflow_dispatch' && github.event.inputs.deploy_infra == 'true'
     outputs:
       s3_bucket: ${{ steps.terraform_outputs.outputs.s3_bucket }}
       cloudfront_id: ${{ steps.terraform_outputs.outputs.cloudfront_id }}
@@ -41,12 +32,6 @@ jobs:
       
       - uses: hashicorp/setup-terraform@v3
       
-      - name: Terraform Init & Apply
-        run: |
-          cd deploy/infrastructure
-          terraform init -backend-config="bucket=${TF_STATE_BUCKET}"
-          terraform apply -auto-approve
-          
       - name: Extract Terraform Outputs
         id: terraform_outputs
         run: |
@@ -58,8 +43,8 @@ jobs:
   # Job 2: Build Applications
   build-apps:
     runs-on: ubuntu-24.04
-    needs: deploy-infrastructure
-    if: always() && (needs.deploy-infrastructure.result == 'success' || needs.deploy-infrastructure.result == 'skipped')
+    needs: infrastructure-info
+    if: always() && (needs.infrastructure-info.result == 'success' || needs.infrastructure-info.result == 'skipped')
     strategy:
       matrix:
         app: [ins-webfe, ins-webserver]
@@ -91,7 +76,7 @@ jobs:
   # Job 3: Deploy ins-webfe to S3/CloudFront
   deploy-ins-webfe:
     runs-on: ubuntu-24.04
-    needs: [deploy-infrastructure, build-apps]
+    needs: [infrastructure-info, build-apps]
     if: always() && needs.build-apps.result == 'success'
     
     steps:
@@ -111,19 +96,19 @@ jobs:
       - name: Deploy to S3
         run: |
           chmod +x deploy/application/ins-webfe/deploy.sh
-          ./deploy/application/ins-webfe/deploy.sh "${{ needs.deploy-infrastructure.outputs.s3_bucket }}"
+          ./deploy/application/ins-webfe/deploy.sh "${{ needs.infrastructure-info.outputs.s3_bucket }}"
       
       - name: Invalidate CloudFront
-        if: needs.deploy-infrastructure.outputs.cloudfront_id != ''
+        if: needs.infrastructure-info.outputs.cloudfront_id != ''
         run: |
           aws cloudfront create-invalidation \
-            --distribution-id ${{ needs.deploy-infrastructure.outputs.cloudfront_id }} \
+            --distribution-id ${{ needs.infrastructure-info.outputs.cloudfront_id }} \
             --paths "/*"
 
   # Job 4: Deploy ins-webserver to Lambda
   deploy-ins-webserver:
     runs-on: ubuntu-24.04
-    needs: [deploy-infrastructure, build-apps]
+    needs: [infrastructure-info, build-apps]
     if: always() && needs.build-apps.result == 'success'
     
     steps:
