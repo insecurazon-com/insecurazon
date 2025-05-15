@@ -1,0 +1,12 @@
+apiVersion: v2
+name: product-service
+description: A Helm chart for the Insecurazon Product Service
+type: application
+version: 0.1.0
+appVersion: "0.1.0"
+keywords:
+  - insecurazon
+  - product
+  - api
+maintainers:
+  - name: Insecurazon Team 
