@@ -44,6 +44,27 @@ module "storage_config" {
   module_depends_on = [ module.iam_config ]
 }
 
+module "database_config" {
+  module_depends_on = [ module.network_config ]
+  source = "./modules/database/documentdb-elastic"
+  
+  environment           = local.documentdb_elastic_config.environment
+  cluster_identifier    = local.documentdb_elastic_config.cluster_identifier
+  instance_count        = local.documentdb_elastic_config.instance_count
+  instance_class        = local.documentdb_elastic_config.instance_class
+  master_username       = local.documentdb_elastic_config.master_username
+  deletion_protection   = local.documentdb_elastic_config.deletion_protection
+  skip_final_snapshot   = local.documentdb_elastic_config.skip_final_snapshot
+  
+  vpc_security_group_ids = [module.network_config.vpc_config.security_group_id]
+  db_subnet_group_name  = module.network_config.vpc_config.database_subnet_group_name
+  
+  tags = {
+    Environment = local.documentdb_elastic_config.environment
+    Project     = "insecurazon"
+  }
+}
+
 output "network_config" {
   value = module.network_config
 }
@@ -57,7 +78,11 @@ output "compute_config" {
   sensitive = true
 }
 
-
 output "storage_config" {
   value = module.storage_config
+}
+
+output "database_config" {
+  value = module.database_config
+  sensitive = true
 }

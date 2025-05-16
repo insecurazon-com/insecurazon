@@ -149,6 +149,8 @@ importers:
         specifier: ^5.0.4
         version: 5.8.2
 
+  apps/ns-product-service: {}
+
   packages/eslint-config:
     devDependencies:
       '@eslint/js':

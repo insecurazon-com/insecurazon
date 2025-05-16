@@ -34,11 +34,12 @@ readinessProbe:
   initialDelaySeconds: 5
   periodSeconds: 5
 
-mongodb:
-  uri: mongodb://mongo:27017/insecurazon
+# mongodb:
+  # uri: mongodb://mongo:27017/insecurazon
   # For production, use secretRef instead of uri
-  secretName: mongodb-secret
-  secretKey: mongodb-uri
+  # secretName: mongodb-secret
+  # secretKey: mongodb-uri
+  # secret: mongodb://root:example@192.168.0.178:27017/insecurazon?authSource=admin
 
 environment:
   - name: PORT

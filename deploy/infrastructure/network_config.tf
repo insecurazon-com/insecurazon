@@ -87,6 +87,26 @@ locals {
           },
           {
             public            = false
+            name              = "data-1"
+            cidr              = "10.1.3.0/24"
+            availability_zone = "eu-central-1a"
+            route_table_name  = "data-1"
+            add_route_table   = false
+            allow_kms         = false
+            allow_secretsmanager = false
+          },
+          {
+            public            = false
+            name              = "data-2"
+            cidr              = "10.1.4.0/24"
+            availability_zone = "eu-central-1b"
+            route_table_name  = "data-2"
+            add_route_table   = false
+            allow_kms         = false
+            allow_secretsmanager = false
+          },
+          {
+            public            = false
             name              = "control-plane-1"
             cidr              = "10.1.3.0/24"
             availability_zone = "eu-central-1a"
@@ -98,6 +118,16 @@ locals {
           {
             public            = false
             name              = "control-plane-2"
+            cidr              = "10.1.4.0/24"
+            availability_zone = "eu-central-1b"
+            route_table_name  = "control-plane-2"
+            add_route_table   = false
+            allow_kms         = false
+            allow_secretsmanager = false
+          },
+          {
+            public            = false
+            name              = "control-plane-3"
             cidr              = "10.1.4.0/24"
             availability_zone = "eu-central-1b"
             route_table_name  = "control-plane-2"

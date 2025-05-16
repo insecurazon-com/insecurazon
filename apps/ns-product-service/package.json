@@ -4,7 +4,6 @@
   "private": true,
   "scripts": {
     "build": "go build -o ./bin/product-service ./cmd",
-    "dev": "go run cmd/main.go",
     "docker:build": "docker build -t insecurazon/product-service:latest .",
     "docker:up": "docker-compose up",
     "docker:down": "docker-compose down",

@@ -6,7 +6,8 @@ locals {
     vpc_id = module.network_config.vpc_config.main.vpc_config.vpc_id
     subnet_ids = [
       module.network_config.vpc_config.main.vpc_config.subnet.main-control-plane-1.id,
-      module.network_config.vpc_config.main.vpc_config.subnet.main-control-plane-2.id
+      module.network_config.vpc_config.main.vpc_config.subnet.main-control-plane-2.id,
+      module.network_config.vpc_config.main.vpc_config.subnet.main-control-plane-3.id
     ]
     cluster_encryption_config = []
     access = {
