@@ -44,26 +44,26 @@ module "storage_config" {
   module_depends_on = [ module.iam_config ]
 }
 
-module "database_config" {
-  module_depends_on = [ module.network_config ]
-  source = "./modules/database/documentdb-elastic"
+# module "database_config" {
+#   module_depends_on = [ module.network_config ]
+#   source = "./modules/database/documentdb-elastic"
   
-  environment           = local.documentdb_elastic_config.environment
-  cluster_identifier    = local.documentdb_elastic_config.cluster_identifier
-  instance_count        = local.documentdb_elastic_config.instance_count
-  instance_class        = local.documentdb_elastic_config.instance_class
-  master_username       = local.documentdb_elastic_config.master_username
-  deletion_protection   = local.documentdb_elastic_config.deletion_protection
-  skip_final_snapshot   = local.documentdb_elastic_config.skip_final_snapshot
+#   environment           = local.documentdb_elastic_config.environment
+#   cluster_identifier    = local.documentdb_elastic_config.cluster_identifier
+#   shard_count           = local.documentdb_elastic_config.shard_count
+#   shard_capacity        = local.documentdb_elastic_config.shard_capacity
+#   master_username       = local.documentdb_elastic_config.master_username
+#   application_users     = local.documentdb_elastic_config.application_users
   
-  vpc_security_group_ids = [module.network_config.vpc_config.security_group_id]
-  db_subnet_group_name  = module.network_config.vpc_config.database_subnet_group_name
+#   vpc_id                = module.network_config.vpc_config.vpc_id
+#   vpc_security_group_ids = [module.network_config.vpc_config.security_group_id]
+#   subnet_ids            = module.network_config.vpc_config.private_subnet_ids
   
-  tags = {
-    Environment = local.documentdb_elastic_config.environment
-    Project     = "insecurazon"
-  }
-}
+#   tags = {
+#     Environment = local.documentdb_elastic_config.environment
+#     Project     = "insecurazon"
+#   }
+# }
 
 output "network_config" {
   value = module.network_config

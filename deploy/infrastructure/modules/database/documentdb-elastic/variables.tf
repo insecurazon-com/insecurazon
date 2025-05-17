@@ -19,28 +19,28 @@ variable "master_username" {
   default     = "admin"
 }
 
-variable "instance_count" {
-  description = "Number of instances in the cluster"
+variable "application_users" {
+  description = "Map of application users with their database access roles"
+  type = map(object({
+    username = string
+    db_roles = list(object({
+      db   = string
+      role = string
+    }))
+  }))
+  default = {}
+}
+
+variable "shard_capacity" {
+  description = "The number of vCPUs assigned to each elastic cluster shard"
+  type        = number
+  default     = 2
+}
+
+variable "shard_count" {
+  description = "The number of shards assigned to the elastic cluster"
   type        = number
   default     = 1
-}
-
-variable "instance_class" {
-  description = "The instance class to use for the cluster instances"
-  type        = string
-  default     = "db.t3.medium"
-}
-
-variable "backup_retention_period" {
-  description = "The days to retain backups for"
-  type        = number
-  default     = 7
-}
-
-variable "preferred_backup_window" {
-  description = "The daily time range during which automated backups are created"
-  type        = string
-  default     = "07:00-09:00"
 }
 
 variable "preferred_maintenance_window" {
@@ -49,16 +49,14 @@ variable "preferred_maintenance_window" {
   default     = "sun:05:00-sun:07:00"
 }
 
-variable "skip_final_snapshot" {
-  description = "Determines whether a final DB snapshot is created before the DB cluster is deleted"
-  type        = bool
-  default     = false
+variable "subnet_ids" {
+  description = "List of VPC subnet IDs to place the elastic cluster"
+  type        = list(string)
 }
 
-variable "deletion_protection" {
-  description = "If the DB instance should have deletion protection enabled"
-  type        = bool
-  default     = true
+variable "vpc_id" {
+  description = "The ID of the VPC where the DocumentDB cluster and Lambda function will be deployed"
+  type        = string
 }
 
 variable "vpc_security_group_ids" {
@@ -66,9 +64,10 @@ variable "vpc_security_group_ids" {
   type        = list(string)
 }
 
-variable "db_subnet_group_name" {
-  description = "A DB subnet group to associate with the cluster"
+variable "kms_key_id" {
+  description = "KMS key ARN or ID for encrypting the elastic cluster"
   type        = string
+  default     = null
 }
 
 variable "tags" {
