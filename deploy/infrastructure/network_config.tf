@@ -108,7 +108,7 @@ locals {
           {
             public            = false
             name              = "control-plane-1"
-            cidr              = "10.1.3.0/24"
+            cidr              = "10.1.11.0/24"
             availability_zone = "eu-central-1a"
             route_table_name  = "control-plane-1"
             add_route_table   = false
@@ -118,7 +118,7 @@ locals {
           {
             public            = false
             name              = "control-plane-2"
-            cidr              = "10.1.4.0/24"
+            cidr              = "10.1.12.0/24"
             availability_zone = "eu-central-1b"
             route_table_name  = "control-plane-2"
             add_route_table   = false
@@ -128,9 +128,9 @@ locals {
           {
             public            = false
             name              = "control-plane-3"
-            cidr              = "10.1.4.0/24"
-            availability_zone = "eu-central-1b"
-            route_table_name  = "control-plane-2"
+            cidr              = "10.1.13.0/24"
+            availability_zone = "eu-central-1c"
+            route_table_name  = "control-plane-3"
             add_route_table   = false
             allow_kms         = false
             allow_secretsmanager = false

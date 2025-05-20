@@ -15,6 +15,7 @@ resource "aws_secretsmanager_secret_version" "documentdb_password" {
   secret_string = jsonencode({
     username = var.master_username
     password = random_password.documentdb_password.result
+    connection_string = "mongodb://${var.master_username}:${random_password.documentdb_password.result}@${aws_docdbelastic_cluster.documentdb_elastic.endpoint}:27017/?tls=true&retryWrites=false"
   })
 }
 
@@ -39,6 +40,7 @@ resource "aws_secretsmanager_secret_version" "app_user_password" {
     username = each.value.username
     password = random_password.app_user_password[each.key].result
     db_roles = each.value.db_roles
+    connection_string = "mongodb://${each.value.username}:${random_password.app_user_password[each.key].result}@${aws_docdbelastic_cluster.documentdb_elastic.endpoint}:27017/?tls=true&retryWrites=false"
   })
 }
 
@@ -55,7 +57,7 @@ resource "aws_docdbelastic_cluster" "documentdb_elastic" {
   shard_count               = var.shard_count
   preferred_maintenance_window = var.preferred_maintenance_window
   subnet_ids                = var.subnet_ids
-  vpc_security_group_ids    = var.vpc_security_group_ids
+  vpc_security_group_ids    = [ aws_security_group.lambda_sg.id ]
   kms_key_id                = var.kms_key_id
   
   tags = var.tags

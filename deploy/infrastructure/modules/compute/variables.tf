@@ -3,7 +3,6 @@ variable "eks_config" {
   type = object({
     cluster_name = string
     cluster_version = string
-    cluster_role_arn = string
     vpc_id = string
     subnet_ids = list(string)
     cluster_encryption_config = list(object({
@@ -33,7 +32,6 @@ variable "eks_config" {
       labels = map(string)
       taints = list(map(string))
     }))
-    node_role_arn = string
     fargate_profiles = map(object({
       name = string
       subnet_ids = list(string)
@@ -42,7 +40,6 @@ variable "eks_config" {
         labels = map(string)
       }))
     }))
-    fargate_pod_execution_role_arn = string
     tags = map(string)
   })
 }

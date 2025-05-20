@@ -59,11 +59,6 @@ variable "vpc_id" {
   type        = string
 }
 
-variable "vpc_security_group_ids" {
-  description = "List of VPC security groups to associate with the cluster"
-  type        = list(string)
-}
-
 variable "kms_key_id" {
   description = "KMS key ARN or ID for encrypting the elastic cluster"
   type        = string

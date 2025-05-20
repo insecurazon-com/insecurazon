@@ -1,5 +1,10 @@
+variable "module_depends_on" {
+  description = "A list of modules that must be created before this one"
+  type = list(any)
+}
+
 module "database_config" {
-  module_depends_on = [ module.network_config ]
+  module_depends_on = [ var.module_depends_on ]
   source = "./documentdb-elastic"
   
   environment           = var.documentdb_elastic_config.environment
@@ -10,8 +15,11 @@ module "database_config" {
   application_users     = var.documentdb_elastic_config.application_users
   
   vpc_id                = var.documentdb_elastic_config.vpc_id
-  vpc_security_group_ids = var.documentdb_elastic_config.vpc_security_group_ids
   subnet_ids            = var.documentdb_elastic_config.subnet_ids
   
   tags = var.documentdb_elastic_config.tags
+}
+
+output "database_config" {
+  value = module.database_config
 }

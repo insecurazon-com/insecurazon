@@ -14,7 +14,6 @@ variable "documentdb_elastic_config" {
       }))
     }))
     vpc_id = string
-    vpc_security_group_ids = list(string)
     subnet_ids = list(string)
     tags = map(string)
   })

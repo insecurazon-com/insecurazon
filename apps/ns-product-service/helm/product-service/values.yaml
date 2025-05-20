@@ -34,12 +34,19 @@ readinessProbe:
   initialDelaySeconds: 5
   periodSeconds: 5
 
-# mongodb:
-  # uri: mongodb://mongo:27017/insecurazon
-  # For production, use secretRef instead of uri
-  # secretName: mongodb-secret
-  # secretKey: mongodb-uri
-  # secret: mongodb://root:example@192.168.0.178:27017/insecurazon?authSource=admin
+# MongoDB Configuration
+mongodb:
+  # Option 1: Direct URI (if you want to provide the connection string directly)
+  uri: ""
+  
+  # Option 2: Secret-based configuration (if using Kubernetes secrets)
+  secretName: "mongodb-secret"
+  secretKey: "connection_string"
+  secret: ""  # Base64 encoded connection string
+  
+  # Option 3: CSI Driver configuration (if using AWS Secrets Manager)
+  secretProviderClass: ""  # Set to the name of your SecretProviderClass if using CSI driver
+  secretPath: "/mnt/secrets/mongodb/connection_string"  # Path where CSI driver will mount the secret
 
 environment:
   - name: PORT
