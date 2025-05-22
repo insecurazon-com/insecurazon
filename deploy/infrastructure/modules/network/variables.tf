@@ -30,21 +30,30 @@ variable "network_config" {
         vpc_endpoint_type   = string
         private_dns_enabled = bool
       })
+      nat_gateway = object({
+        subnet_names = list(string)
+      })
       subnets       = list(object({
-        public            = bool
         name              = string
         cidr              = string
         availability_zone = string
-        route_table_name  = string
-        add_route_table   = bool
+        default_route     = string
         allow_kms         = bool
         allow_secretsmanager = bool
       }))
     }))
-    peering = map(object({
-      vpc_name = string
-      peer_vpc_name = string
-      tags = map(string)
-    }))
   })
+}
+
+variable "routing_config" {
+  description = "Map of routing configurations"
+  type        = list(object({
+    vpc_name = string
+    subnet_name = string
+    routes = list(object({
+      destination_cidr_block = string
+      gateway = string
+    }))
+    associated_endpoints = list(string)
+  }))
 }

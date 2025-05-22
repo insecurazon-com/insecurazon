@@ -32,14 +32,39 @@ locals {
         igw = {
           add_igw = true
         }
+        nat_gateway = {
+          subnet_names = ["nat-1", "nat-2"]
+        }
         subnets = [
           {
-            public            = true
-            name              = "public"
+            name              = "public-1"
             cidr              = "10.0.1.0/24"
             availability_zone = "eu-central-1a"
-            route_table_name  = "public"
-            add_route_table   = true
+            default_route     = ""
+            allow_kms         = false
+            allow_secretsmanager = false
+          },
+          {
+            name              = "public-2"
+            cidr              = "10.0.2.0/24"
+            availability_zone = "eu-central-1b"
+            default_route     = ""
+            allow_kms         = false
+            allow_secretsmanager = false
+          },
+          {
+            name              = "nat-1"
+            cidr              = "10.0.3.0/24"
+            availability_zone = "eu-central-1c"
+            default_route     = "igw"
+            allow_kms         = false
+            allow_secretsmanager = false
+          },
+          {
+            name              = "nat-2"
+            cidr              = "10.0.4.0/24"
+            availability_zone = "eu-central-1d"
+            default_route     = "igw"
             allow_kms         = false
             allow_secretsmanager = false
           }
@@ -64,86 +89,144 @@ locals {
         igw = {
           add_igw = false
         }
+        nat_gateway = {
+          subnet_names = []
+        }
         subnets = [
           {
-            public            = false
             name              = "services-1"
             cidr              = "10.1.1.0/24"
             availability_zone = "eu-central-1a"
-            route_table_name  = "services-1"
-            add_route_table   = false
+            default_route     = "tgw"
             allow_kms         = false
             allow_secretsmanager = false
           },
           {
-            public            = false
             name              = "services-2"
             cidr              = "10.1.2.0/24"
             availability_zone = "eu-central-1b"
-            route_table_name  = "services-2"
-            add_route_table   = false
+            default_route     = "tgw"
             allow_kms         = false
             allow_secretsmanager = false
           },
           {
-            public            = false
             name              = "data-1"
             cidr              = "10.1.3.0/24"
             availability_zone = "eu-central-1a"
-            route_table_name  = "data-1"
-            add_route_table   = false
+            default_route     = ""
             allow_kms         = false
             allow_secretsmanager = false
           },
           {
-            public            = false
             name              = "data-2"
             cidr              = "10.1.4.0/24"
             availability_zone = "eu-central-1b"
-            route_table_name  = "data-2"
-            add_route_table   = false
+            default_route     = ""
             allow_kms         = false
             allow_secretsmanager = false
           },
           {
-            public            = false
             name              = "control-plane-1"
             cidr              = "10.1.11.0/24"
             availability_zone = "eu-central-1a"
-            route_table_name  = "control-plane-1"
-            add_route_table   = false
+            default_route     = ""
             allow_kms         = false
             allow_secretsmanager = false
           },
           {
-            public            = false
             name              = "control-plane-2"
             cidr              = "10.1.12.0/24"
             availability_zone = "eu-central-1b"
-            route_table_name  = "control-plane-2"
-            add_route_table   = false
+            default_route     = ""
             allow_kms         = false
             allow_secretsmanager = false
           },
           {
-            public            = false
             name              = "control-plane-3"
             cidr              = "10.1.13.0/24"
             availability_zone = "eu-central-1c"
-            route_table_name  = "control-plane-3"
-            add_route_table   = false
+            default_route     = ""
             allow_kms         = false
             allow_secretsmanager = false
           }
         ]
       }
     }
-    peering = {
-      egress_to_main = {
-        vpc_name = "egress"
-        peer_vpc_name = "main"
-        tags = {}
-      }
-    }
   }
+  routing_config = [
+    {
+      vpc_name = "egress"
+      subnet_name = "public-1"
+      routes = [
+        {
+          destination_cidr_block = "0.0.0.0/0"
+          gateway = "internet_gateway"
+        }
+      ]
+      associated_endpoints = []
+    },
+    {
+      vpc_name = "egress"
+      subnet_name = "public-2"
+      routes = [
+        {
+          destination_cidr_block = "0.0.0.0/0"
+          gateway = "internet_gateway"
+        }
+      ]
+      associated_endpoints = []
+    },
+    {
+      vpc_name = "main"
+      subnet_name = "services-1"
+      routes = [
+        {
+          destination_cidr_block = "0.0.0.0/0"
+          gateway = "transit_gateway"
+        }
+      ]
+      associated_endpoints = []
+    },
+    {
+      vpc_name = "main"
+      subnet_name = "services-2"
+      routes = [
+        {
+          destination_cidr_block = "0.0.0.0/0"
+          gateway = "transit_gateway"
+        }
+      ]
+      associated_endpoints = []
+    },
+    {
+      vpc_name = "main"
+      subnet_name = "data-1"
+      routes = []
+      associated_endpoints = []
+    },
+    {
+      vpc_name = "main"
+      subnet_name = "data-2"
+      routes = []
+      associated_endpoints = []
+    },
+    {
+      vpc_name = "main"
+      subnet_name = "control-plane-1"
+      routes = []
+      associated_endpoints = []
+    },
+    {
+      vpc_name = "main"
+      subnet_name = "control-plane-2"
+      routes = []
+      associated_endpoints = []
+    },
+    {
+      vpc_name = "main"
+      subnet_name = "control-plane-3"
+      routes = []
+      associated_endpoints = []
+    }
+  ]
 }

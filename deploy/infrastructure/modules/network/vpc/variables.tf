@@ -30,15 +30,21 @@ variable "vpc_config" {
       private_dns_enabled = bool
       vpc_endpoint_type   = string
     })
+    nat_gateway = object({
+      subnet_names = list(string)
+    })
     subnets       = list(object({
-      public               = bool
+      name                 = string
       cidr                 = string
       availability_zone    = string
-      name                 = string
-      route_table_name     = string
-      add_route_table      = bool
+      default_route        = string
       allow_kms            = bool
       allow_secretsmanager = bool
     }))
   })
+}
+
+variable "transit_gateway_id" {
+  description = "The ID of the Transit Gateway"
+  type        = string
 }

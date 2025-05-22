@@ -41,4 +41,24 @@ locals {
       "Name" = "eks-cluster"
     }
   }
+  argocd_config = {
+    enabled = true
+    namespace = "argocd"
+    version = "v3.0.2"
+    admin_password = "admin"
+    server = {
+      host = "argocd.example.com"
+      port = 443
+      secure = true
+    }
+    rbac = {
+      enabled = true
+      policy_csv = ""
+    }
+    notifications = {
+      enabled = false
+      config = ""
+    }
+    applications = []
+  }
 }

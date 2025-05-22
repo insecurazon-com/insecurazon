@@ -6,7 +6,7 @@ resource "random_password" "documentdb_password" {
 }
 
 resource "aws_secretsmanager_secret" "documentdb_password" {
-  name        = "documentdb-elastic-password-${var.environment}"
+  name        = "documentdb-elastic-password-${var.environment}-v2"
   description = "DocumentDB Elastic Cluster password for ${var.environment} environment"
 }
 
@@ -29,7 +29,7 @@ resource "random_password" "app_user_password" {
 
 resource "aws_secretsmanager_secret" "app_user_password" {
   for_each    = var.application_users
-  name        = "documentdb-elastic-app-user-${each.value.username}-${var.environment}"
+  name        = "documentdb-elastic-app-user-${each.value.username}-${var.environment}-v2"
   description = "DocumentDB Elastic Cluster application user ${each.value.username} password for ${var.environment} environment"
 }
 

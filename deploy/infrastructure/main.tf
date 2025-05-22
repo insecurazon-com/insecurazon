@@ -22,6 +22,7 @@ module "network_config" {
   region = var.region
   domain_name = var.domain_name
   network_config = local.network_config
+  routing_config = local.routing_config
 }
 
 module "storage_config" {
@@ -42,6 +43,7 @@ module "compute_config" {
   source = "./modules/compute"
   eks_config = local.eks_config
   lambda_config = local.lambda_config
+  argocd_config = local.argocd_config
 }
 
 output "network_config" {

@@ -20,3 +20,25 @@ resource "aws_security_group_rule" "cluster_egress" {
   to_port           = 0
   type              = "egress"
 }
+
+# Create security group for Lambda
+resource "aws_security_group" "lambda" {
+  count       = var.install_argocd ? 1 : 0
+  name        = "${var.eks_config.cluster_name}-argocd-installer-lambda"
+  description = "Security group for ArgoCD installer Lambda"
+  vpc_id      = var.eks_config.vpc_id
+
+  egress {
+    from_port   = 0
+    to_port     = 0
+    protocol    = "-1"
+    cidr_blocks = ["0.0.0.0/0"]
+  }
+
+  tags = merge(
+    var.eks_config.tags,
+    {
+      Name = "${var.eks_config.cluster_name}-argocd-installer-lambda"
+    }
+  )
+}

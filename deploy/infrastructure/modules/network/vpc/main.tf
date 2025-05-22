@@ -24,6 +24,7 @@ resource "aws_vpc_dhcp_options" "this" {
 }
 
 resource "aws_internet_gateway" "this" {
+  count = var.vpc_config.igw.add_igw ? 1 : 0
   vpc_id = aws_vpc.this.id
 
   tags = {
@@ -41,9 +42,17 @@ output "vpc_config" {
     vpc_id = aws_vpc.this.id
     vpc_name = aws_vpc.this.tags.Name
     cidr_block = aws_vpc.this.cidr_block
+    nat_gateway = length(var.vpc_config.nat_gateway.subnet_names) > 0 ? {
+      id = aws_nat_gateway.this[0].id
+      subnet_id = aws_nat_gateway.this[0].subnet_id
+    } : null
+    internet_gateway = var.vpc_config.igw.add_igw ? {
+      id = aws_internet_gateway.this[0].id
+    } : null
     subnet = {
       for subnet in aws_subnet.this : subnet.tags.Name => {
         id = subnet.id
+        name = subnet.tags.Name
         cidr_block = subnet.cidr_block
         arn = subnet.arn
         availability_zone = subnet.availability_zone

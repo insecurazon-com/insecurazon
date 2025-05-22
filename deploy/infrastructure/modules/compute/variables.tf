@@ -44,6 +44,78 @@ variable "eks_config" {
   })
 }
 
+variable "default_cluster_version" {
+  description = "Kubernetes version to use for the EKS cluster"
+  type        = string
+  default     = "1.32"
+}
+
+variable "default_cluster_enabled_log_types" {
+  description = "A list of the desired control plane logs to enable"
+  type        = list(string)
+  default     = ["api", "audit", "authenticator", "controllerManager", "scheduler"]
+}
+
+variable "install_argocd" {
+  description = "Whether to install ArgoCD on the cluster"
+  type        = bool
+  default     = true
+}
+
+variable "lambda_timeout" {
+  description = "Timeout for the Lambda function in seconds"
+  type        = number
+  default     = 900
+}
+
+variable "lambda_memory_size" {
+  description = "Memory size for the Lambda function in MB"
+  type        = number
+  default     = 512
+}
+
+variable "argocd_config" {
+  description = "ArgoCD configuration"
+  type = object({
+    enabled = bool
+    namespace = string
+    version = string
+    admin_password = string
+    server = object({
+      host = string
+      port = number
+      secure = bool
+    })
+    rbac = object({
+      enabled = bool
+      policy_csv = string
+    })
+    notifications = object({
+      enabled = bool
+      config = string
+    })
+    applications = list(object({
+      name = string
+      namespace = string
+      source = object({
+        repo_url = string
+        path = string
+        target_revision = string
+      })
+      destination = object({
+        server = string
+        namespace = string
+      })
+      sync_policy = object({
+        automated = object({
+          prune = bool
+          self_heal = bool
+        })
+        sync_options = list(string)
+      })
+    }))
+  })
+}
 
 variable "lambda_config" {
   description = "Configuration for the Lambda function"
