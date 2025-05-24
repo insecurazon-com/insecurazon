@@ -53,17 +53,33 @@ locals {
             allow_secretsmanager = false
           },
           {
-            name              = "nat-1"
+            name              = "public-3"
             cidr              = "10.0.3.0/24"
             availability_zone = "eu-central-1c"
+            default_route     = ""
+            allow_kms         = false
+            allow_secretsmanager = false
+          },
+          {
+            name              = "nat-1"
+            cidr              = "10.0.11.0/24"
+            availability_zone = "eu-central-1a"
             default_route     = "igw"
             allow_kms         = false
             allow_secretsmanager = false
           },
           {
             name              = "nat-2"
-            cidr              = "10.0.4.0/24"
-            availability_zone = "eu-central-1d"
+            cidr              = "10.0.12.0/24"
+            availability_zone = "eu-central-1b"
+            default_route     = "igw"
+            allow_kms         = false
+            allow_secretsmanager = false
+          },
+          {
+            name              = "nat-3"
+            cidr              = "10.0.13.0/24"
+            availability_zone = "eu-central-1c"
             default_route     = "igw"
             allow_kms         = false
             allow_secretsmanager = false
@@ -110,23 +126,15 @@ locals {
             allow_secretsmanager = false
           },
           {
-            name              = "data-1"
+            name              = "services-3"
             cidr              = "10.1.3.0/24"
-            availability_zone = "eu-central-1a"
-            default_route     = ""
+            availability_zone = "eu-central-1c"
+            default_route     = "tgw"
             allow_kms         = false
             allow_secretsmanager = false
           },
           {
-            name              = "data-2"
-            cidr              = "10.1.4.0/24"
-            availability_zone = "eu-central-1b"
-            default_route     = ""
-            allow_kms         = false
-            allow_secretsmanager = false
-          },
-          {
-            name              = "control-plane-1"
+            name              = "data-1"
             cidr              = "10.1.11.0/24"
             availability_zone = "eu-central-1a"
             default_route     = ""
@@ -134,7 +142,7 @@ locals {
             allow_secretsmanager = false
           },
           {
-            name              = "control-plane-2"
+            name              = "data-2"
             cidr              = "10.1.12.0/24"
             availability_zone = "eu-central-1b"
             default_route     = ""
@@ -142,8 +150,32 @@ locals {
             allow_secretsmanager = false
           },
           {
-            name              = "control-plane-3"
+            name              = "data-3"
             cidr              = "10.1.13.0/24"
+            availability_zone = "eu-central-1c"
+            default_route     = ""
+            allow_kms         = false
+            allow_secretsmanager = false
+          },
+          {
+            name              = "control-plane-1"
+            cidr              = "10.1.21.0/24"
+            availability_zone = "eu-central-1a"
+            default_route     = ""
+            allow_kms         = false
+            allow_secretsmanager = false
+          },
+          {
+            name              = "control-plane-2"
+            cidr              = "10.1.22.0/24"
+            availability_zone = "eu-central-1b"
+            default_route     = ""
+            allow_kms         = false
+            allow_secretsmanager = false
+          },
+          {
+            name              = "control-plane-3"
+            cidr              = "10.1.23.0/24"
             availability_zone = "eu-central-1c"
             default_route     = ""
             allow_kms         = false
@@ -177,6 +209,17 @@ locals {
       associated_endpoints = []
     },
     {
+      vpc_name = "egress"
+      subnet_name = "public-3"
+      routes = [
+        {
+          destination_cidr_block = "0.0.0.0/0"
+          gateway = "internet_gateway"
+        }
+      ]
+      associated_endpoints = []
+    },
+    {
       vpc_name = "main"
       subnet_name = "services-1"
       routes = [
@@ -200,6 +243,17 @@ locals {
     },
     {
       vpc_name = "main"
+      subnet_name = "services-3"
+      routes = [
+        {
+          destination_cidr_block = "0.0.0.0/0"
+          gateway = "transit_gateway"
+        }
+      ]
+      associated_endpoints = []
+    },
+    {
+      vpc_name = "main"
       subnet_name = "data-1"
       routes = []
       associated_endpoints = []
@@ -207,6 +261,12 @@ locals {
     {
       vpc_name = "main"
       subnet_name = "data-2"
+      routes = []
+      associated_endpoints = []
+    },
+    {
+      vpc_name = "main"
+      subnet_name = "data-3"
       routes = []
       associated_endpoints = []
     },
@@ -227,6 +287,69 @@ locals {
       subnet_name = "control-plane-3"
       routes = []
       associated_endpoints = []
+    },
+    # Add routing configuration for NAT subnets in egress VPC
+    # These subnets receive traffic from Transit Gateway and need to route it to NAT Gateway
+    {
+      vpc_name = "egress"
+      subnet_name = "nat-1"
+      routes = [
+        {
+          destination_cidr_block = "10.1.0.0/16"
+          gateway = "nat_gateway"
+        }
+      ]
+      associated_endpoints = []
+    },
+    {
+      vpc_name = "egress"
+      subnet_name = "nat-2"
+      routes = [
+        {
+          destination_cidr_block = "10.1.0.0/16"
+          gateway = "nat_gateway"
+        }
+      ]
+      associated_endpoints = []
     }
   ]
+  transit_gateway_config = {
+    attachments = {
+      main = {
+        vpc_name = "main"
+        subnets = ["main-services-1", "main-services-2", "main-services-3"]
+        appliance_mode_support = "enable"
+      },
+      egress = {
+        vpc_name = "egress"
+        subnets = ["egress-nat-1", "egress-nat-2", "egress-nat-3"]
+        appliance_mode_support = "enable"
+      }
+    }
+    routes = [
+      {
+        destination_cidr_block = "0.0.0.0/0"
+        transit_gateway_attachment = "egress"
+      }
+    ]
+  }
+  client_vpn_config = {
+    enabled = true
+    client_cidr_block = "10.200.0.0/16"
+    vpc_name = "main"
+    subnet_names = ["main-services-1", "main-services-2", "main-services-3"]
+    
+    authentication_type = "certificate-authentication"
+    # server_certificate_arn = null  # Will be auto-generated
+    # client_certificate_arn = null  # Will be auto-generated
+    
+    authorization_rules = [
+      {
+        target_network_cidr = "10.0.0.0/8"
+        description = "Access to private networks"
+      }
+    ]
+    
+    connect_to_transit_gateway = true
+  }
 }

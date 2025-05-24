@@ -36,6 +36,19 @@ locals {
           }
         ]
       }
+      "argocd" = {
+        name = "argocd"
+        subnet_ids = [
+          module.network_config.vpc_config.main.vpc_config.subnet.main-services-1.id,
+          module.network_config.vpc_config.main.vpc_config.subnet.main-services-2.id
+        ]
+        selectors = [
+          {
+            namespace = "argocd"
+            labels = {}
+          }
+        ]
+      }
     }
     tags = {
       "Name" = "eks-cluster"

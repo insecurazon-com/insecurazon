@@ -128,3 +128,9 @@ variable "lambda_config" {
     api_gateway_name = string
   })
 }
+
+variable "network_config" {
+  description = "Network configuration from the network module"
+  type = any  # Using 'any' to accept the complex network module output
+  default = null
+}

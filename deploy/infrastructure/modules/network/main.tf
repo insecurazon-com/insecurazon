@@ -38,13 +38,6 @@ locals {
   }
 }
 
-# module "routing" {
-#   for_each = module.vpc
-#   source = "./routing"
-#   vpc_config = each.value.vpc_config
-#   nat_gateway = local.nat_gateway
-# }
-
 module "routing" {
   for_each = local.routing_config
   source = "./routing"
@@ -57,4 +50,8 @@ output "vpc_config" {
 
 output "routing_config" {
   value = module.routing
+}
+
+output "client_vpn_enabled" {
+  value = var.client_vpn_config.enabled
 }

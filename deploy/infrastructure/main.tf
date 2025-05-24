@@ -23,6 +23,8 @@ module "network_config" {
   domain_name = var.domain_name
   network_config = local.network_config
   routing_config = local.routing_config
+  transit_gateway_config = local.transit_gateway_config
+  client_vpn_config = local.client_vpn_config
 }
 
 module "storage_config" {
@@ -32,18 +34,19 @@ module "storage_config" {
   module_depends_on = [ module.network_config ]
 }
 
-module "database_config" {
-  module_depends_on = [ module.network_config ]
-  source = "./modules/database"
-  documentdb_elastic_config = local.documentdb_elastic_config
-}
+# module "database_config" {
+#   module_depends_on = [ module.network_config ]
+#   source = "./modules/database"
+#   documentdb_elastic_config = local.documentdb_elastic_config
+# }
 
 module "compute_config" {
-  module_depends_on = [ module.database_config ]
+  module_depends_on = [ module.storage_config ]
   source = "./modules/compute"
   eks_config = local.eks_config
   lambda_config = local.lambda_config
   argocd_config = local.argocd_config
+  network_config = module.network_config
 }
 
 output "network_config" {
@@ -59,7 +62,7 @@ output "storage_config" {
   value = module.storage_config
 }
 
-output "database_config" {
-  value = module.database_config
-  sensitive = true
-}
+# output "database_config" {
+#   value = module.database_config
+#   sensitive = true
+# }

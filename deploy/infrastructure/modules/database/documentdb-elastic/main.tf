@@ -5,8 +5,12 @@ resource "random_password" "documentdb_password" {
   depends_on       = [var.module_depends_on]
 }
 
+resource "random_id" "secret_suffix" {
+  byte_length = 4
+}
+
 resource "aws_secretsmanager_secret" "documentdb_password" {
-  name        = "documentdb-elastic-password-${var.environment}-v2"
+  name        = "documentdb-elastic-password-${var.environment}-${random_id.secret_suffix.hex}"
   description = "DocumentDB Elastic Cluster password for ${var.environment} environment"
 }
 
@@ -29,7 +33,7 @@ resource "random_password" "app_user_password" {
 
 resource "aws_secretsmanager_secret" "app_user_password" {
   for_each    = var.application_users
-  name        = "documentdb-elastic-app-user-${each.value.username}-${var.environment}-v2"
+  name        = "documentdb-elastic-app-user-${each.value.username}-${var.environment}-${random_id.secret_suffix.hex}"
   description = "DocumentDB Elastic Cluster application user ${each.value.username} password for ${var.environment} environment"
 }
 

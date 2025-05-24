@@ -97,38 +97,53 @@ resource "aws_iam_role_policy_attachment" "fargate_pod_execution_role_policy" {
   role       = aws_iam_role.fargate[count.index].name
 } 
 
-resource "aws_iam_role_policy" "lambda" {
+# Lambda IAM role
+resource "aws_iam_role" "lambda" {
   count = var.install_argocd ? 1 : 0
   name  = "${var.eks_config.cluster_name}-argocd-installer"
-  role  = aws_iam_role.lambda[0].id
 
-  policy = jsonencode({
+  assume_role_policy = jsonencode({
     Version = "2012-10-17"
     Statement = [
       {
+        Action = "sts:AssumeRole"
         Effect = "Allow"
-        Action = [
-          "eks:DescribeCluster",
-          "eks:ListClusters"
-        ]
-        Resource = "*"
-      },
+        Principal = {
+          Service = "lambda.amazonaws.com"
+        }
+      }
+    ]
+  })
+
+  tags = var.eks_config.tags
+}
+
+resource "aws_iam_role_policy" "lambda" {
+  count = var.install_argocd ? 1 : 0
+  name   = "${var.eks_config.cluster_name}-argocd-installer-policy"
+  role   = aws_iam_role.lambda[0].id
+  
+  policy = jsonencode({
+    Version = "2012-10-17",
+    Statement = [
       {
-        Effect = "Allow"
+        Effect = "Allow",
         Action = [
           "logs:CreateLogGroup",
           "logs:CreateLogStream",
           "logs:PutLogEvents"
-        ]
+        ],
         Resource = "arn:aws:logs:*:*:*"
       },
       {
-        Effect = "Allow"
+        Effect = "Allow",
         Action = [
           "ec2:CreateNetworkInterface",
           "ec2:DescribeNetworkInterfaces",
-          "ec2:DeleteNetworkInterface"
-        ]
+          "ec2:DeleteNetworkInterface",
+          "ec2:AssignPrivateIpAddresses",
+          "ec2:UnassignPrivateIpAddresses"
+        ],
         Resource = "*"
       }
     ]

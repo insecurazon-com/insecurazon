@@ -6,6 +6,7 @@ variable "module_depends_on" {
 module "eks" {
   source = "./eks"
   eks_config = var.eks_config
+  network_config = var.network_config
   module_depends_on = var.module_depends_on
 }
 

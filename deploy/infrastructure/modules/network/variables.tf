@@ -57,3 +57,61 @@ variable "routing_config" {
     associated_endpoints = list(string)
   }))
 }
+
+variable "nat_routing_config" {
+  description = "Additional routing configurations for NAT subnets"
+  type        = list(object({
+    vpc_name = string
+    subnet_name = string
+    routes = list(object({
+      destination_cidr_block = string
+      gateway = string
+    }))
+    associated_endpoints = list(string)
+  }))
+  default = []
+}
+
+variable "client_vpn_config" {
+  description = "Configuration for Client VPN"
+  type = object({
+    enabled = bool
+    client_cidr_block = string
+    authentication_type = string # "certificate-authentication" or "directory-service-authentication"
+    
+    # Certificate authentication settings (required if authentication_type is "certificate-authentication")
+    server_certificate_arn = optional(string)
+    client_certificate_arn = optional(string)
+    
+    # Directory service settings (required if authentication_type is "directory-service-authentication") 
+    directory_id = optional(string)
+    
+    # Network settings
+    vpc_name = string # Which VPC to attach the Client VPN to
+    subnet_names = list(string) # Which subnets to associate with
+    
+    # VPN settings
+    dns_servers = optional(list(string))
+    split_tunnel = optional(bool, true)
+    vpn_port = optional(number, 443)
+    transport_protocol = optional(string, "udp")
+    
+    # Authorization settings
+    authorization_rules = list(object({
+      target_network_cidr = string
+      description = optional(string)
+    }))
+    
+    # Transit Gateway integration
+    connect_to_transit_gateway = bool
+  })
+  default = {
+    enabled = false
+    client_cidr_block = "192.168.100.0/22"
+    authentication_type = "certificate-authentication"
+    vpc_name = ""
+    subnet_names = []
+    authorization_rules = []
+    connect_to_transit_gateway = false
+  }
+}

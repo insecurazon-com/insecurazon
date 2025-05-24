@@ -137,5 +137,10 @@ variable "argocd_config" {
   }
 }
 
+variable "network_config" {
+  description = "Network configuration from the network module"
+  type = any  # Using 'any' to accept the complex network module output
+}
+
 
 
