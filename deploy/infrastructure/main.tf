@@ -7,7 +7,7 @@ terraform {
   }
   backend "s3" {
     bucket         = "insecurazon-terraform-state-bucket"
-    key            = "path/to/your/terraform.tfstate"
+    key            = "/infrastructure/terraform.tfstate"
     region         = "eu-central-1"
     encrypt        = true
   }
