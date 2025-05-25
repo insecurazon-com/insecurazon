@@ -33,7 +33,7 @@ locals {
           add_igw = true
         }
         nat_gateway = {
-          subnet_names = ["nat-1", "nat-2"]
+          subnet_names = ["nat-1", "nat-2", "nat-3"]
         }
         subnets = [
           {
@@ -289,13 +289,13 @@ locals {
       associated_endpoints = []
     },
     # Add routing configuration for NAT subnets in egress VPC
-    # These subnets receive traffic from Transit Gateway and need to route it to NAT Gateway
+    # These subnets receive traffic from Transit Gateway and need to route it to internet via NAT Gateway
     {
       vpc_name = "egress"
       subnet_name = "nat-1"
       routes = [
         {
-          destination_cidr_block = "10.1.0.0/16"
+          destination_cidr_block = "0.0.0.0/0"
           gateway = "nat_gateway"
         }
       ]
@@ -306,7 +306,18 @@ locals {
       subnet_name = "nat-2"
       routes = [
         {
-          destination_cidr_block = "10.1.0.0/16"
+          destination_cidr_block = "0.0.0.0/0"
+          gateway = "nat_gateway"
+        }
+      ]
+      associated_endpoints = []
+    },
+    {
+      vpc_name = "egress"
+      subnet_name = "nat-3"
+      routes = [
+        {
+          destination_cidr_block = "0.0.0.0/0"
           gateway = "nat_gateway"
         }
       ]
@@ -318,12 +329,12 @@ locals {
       main = {
         vpc_name = "main"
         subnets = ["main-services-1", "main-services-2", "main-services-3"]
-        appliance_mode_support = "enable"
+        appliance_mode_support = "disable"
       },
       egress = {
         vpc_name = "egress"
         subnets = ["egress-nat-1", "egress-nat-2", "egress-nat-3"]
-        appliance_mode_support = "enable"
+        appliance_mode_support = "disable"
       }
     }
     routes = [

@@ -72,6 +72,20 @@ variable "nat_routing_config" {
   default = []
 }
 
+variable "transit_gateway_config" {
+type = object({
+  attachments = map(object({
+    vpc_name = string
+    subnets = list(string)
+    appliance_mode_support = string
+  }))
+  routes = list(object({
+    destination_cidr_block = string
+    transit_gateway_attachment = string
+  }))
+})
+}
+
 variable "client_vpn_config" {
   description = "Configuration for Client VPN"
   type = object({

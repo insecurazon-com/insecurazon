@@ -101,7 +101,7 @@ resource "aws_eks_fargate_profile" "this" {
     for_each = each.value.selectors
     content {
       namespace = selector.value.namespace
-      labels    = selector.value.labels
+      labels    = selector.value.labels != null && length(selector.value.labels) > 0 ? selector.value.labels : null
     }
   }
 

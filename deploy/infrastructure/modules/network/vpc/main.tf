@@ -46,6 +46,12 @@ output "vpc_config" {
       id = aws_nat_gateway.this[0].id
       subnet_id = aws_nat_gateway.this[0].subnet_id
     } : null
+    nat_gateways = {
+      for i, nat_gw in aws_nat_gateway.this : var.vpc_config.nat_gateway.subnet_names[i] => {
+        id = nat_gw.id
+        subnet_id = nat_gw.subnet_id
+      }
+    }
     internet_gateway = var.vpc_config.igw.add_igw ? {
       id = aws_internet_gateway.this[0].id
     } : null

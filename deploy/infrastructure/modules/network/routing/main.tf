@@ -1,4 +1,3 @@
-
 # resource "aws_route_table" "this" {
 #   for_each = var.vpc_config.subnet
 #   vpc_id = var.vpc_config.vpc_id
@@ -63,6 +62,11 @@ resource "aws_route_table" "this" {
   tags = {
     Name = "${var.routing_config.vpc_name}-${var.routing_config.subnet_name}"
   }
+}
+
+resource "aws_route_table_association" "this" {
+  subnet_id      = var.routing_config.subnet_id
+  route_table_id = aws_route_table.this.id
 }
 
 resource "aws_vpc_endpoint_route_table_association" "this" {

@@ -25,7 +25,8 @@ locals {
         name = "default"
         subnet_ids = [
           module.network_config.vpc_config.main.vpc_config.subnet.main-services-1.id,
-          module.network_config.vpc_config.main.vpc_config.subnet.main-services-2.id
+          module.network_config.vpc_config.main.vpc_config.subnet.main-services-2.id,
+          module.network_config.vpc_config.main.vpc_config.subnet.main-services-3.id
         ]
         selectors = [
           {
@@ -40,7 +41,8 @@ locals {
         name = "argocd"
         subnet_ids = [
           module.network_config.vpc_config.main.vpc_config.subnet.main-services-1.id,
-          module.network_config.vpc_config.main.vpc_config.subnet.main-services-2.id
+          module.network_config.vpc_config.main.vpc_config.subnet.main-services-2.id,
+          module.network_config.vpc_config.main.vpc_config.subnet.main-services-3.id
         ]
         selectors = [
           {
