@@ -43,4 +43,5 @@ terraform.tfstate*
 *.tfstate*
 *.tfstate
 *.zip
+*.tfvars
 layer

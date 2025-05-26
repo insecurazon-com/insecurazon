@@ -6,11 +6,16 @@ terraform {
     }
   }
   backend "s3" {
-    bucket         = "insecurazon-terraform-state-bucket"
+    bucket         = "${var.terraform_state_bucket}"
     key            = "infrastructure/terraform.tfstate"
     region         = "eu-central-1"
     encrypt        = true
   }
+}
+
+variable "terraform_state_bucket" {
+  type = string
+  default = "insecurazon-terraform-state-bucket"
 }
 
 provider "aws" {

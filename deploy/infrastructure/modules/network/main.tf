@@ -77,6 +77,11 @@ output "transit_gateway_config" {
         subnet_ids = attachment.subnet_ids
       }
     }
+  }
+}
+
+output "client_vpn_config" {
+  value = {
     client_vpn = local.client_vpn_enabled ? {
       endpoint_id = aws_ec2_client_vpn_endpoint.this[0].id
       client_cidr_block = aws_ec2_client_vpn_endpoint.this[0].client_cidr_block

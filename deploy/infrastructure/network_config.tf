@@ -255,37 +255,67 @@ locals {
     {
       vpc_name = "main"
       subnet_name = "data-1"
-      routes = []
+      routes = [
+        {
+          destination_cidr_block = "0.0.0.0/0"
+          gateway = "transit_gateway"
+        }
+      ]
       associated_endpoints = []
     },
     {
       vpc_name = "main"
       subnet_name = "data-2"
-      routes = []
+      routes = [
+        {
+          destination_cidr_block = "0.0.0.0/0"
+          gateway = "transit_gateway"
+        }
+      ]
       associated_endpoints = []
     },
     {
       vpc_name = "main"
       subnet_name = "data-3"
-      routes = []
+      routes = [
+        {
+          destination_cidr_block = "0.0.0.0/0"
+          gateway = "transit_gateway"
+        }
+      ]
       associated_endpoints = []
     },
     {
       vpc_name = "main"
       subnet_name = "control-plane-1"
-      routes = []
+      routes = [
+        {
+          destination_cidr_block = "0.0.0.0/0"
+          gateway = "transit_gateway"
+        }
+      ]
       associated_endpoints = []
     },
     {
       vpc_name = "main"
       subnet_name = "control-plane-2"
-      routes = []
+      routes = [
+        {
+          destination_cidr_block = "0.0.0.0/0"
+          gateway = "transit_gateway"
+        }
+      ]
       associated_endpoints = []
     },
     {
       vpc_name = "main"
       subnet_name = "control-plane-3"
-      routes = []
+      routes = [
+        {
+          destination_cidr_block = "0.0.0.0/0"
+          gateway = "transit_gateway"
+        }
+      ]
       associated_endpoints = []
     },
     # Add routing configuration for NAT subnets in egress VPC
@@ -345,10 +375,11 @@ locals {
     ]
   }
   client_vpn_config = {
-    enabled = true
+    enabled = false
     client_cidr_block = "10.200.0.0/16"
     vpc_name = "main"
     subnet_names = ["main-services-1", "main-services-2", "main-services-3"]
+    split_tunnel = true
     
     authentication_type = "certificate-authentication"
     # server_certificate_arn = null  # Will be auto-generated
