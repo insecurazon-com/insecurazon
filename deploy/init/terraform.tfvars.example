@@ -1,0 +1,28 @@
+terraform_state_bucket = "insecurazon-terraform-state-bucket"
+
+region = "eu-central-1"  # Change to your preferred region
+
+# Your EC2 Key Pair name (create this in AWS Console first)
+key_pair_name = "my-keypair"
+
+# For DYNAMIC IP users - choose one of these approaches:
+
+# Option 1: Allow from anywhere (less secure, but works with dynamic IP)
+my_ip = "0.0.0.0/0"
+admin_access_cidr = "0.0.0.0/0"
+
+# Option 2: Use your ISP's IP range (more secure)
+# Find your ISP's range: whois $(curl -s ifconfig.me)
+# my_ip = "203.0.113.0/24"  # Replace with your ISP's range
+# admin_access_cidr = "203.0.113.0/24"
+
+# Option 3: Use your current IP (you'll need to update when it changes)
+# Get your current IP: curl ifconfig.me
+# my_ip = "203.0.113.1/32"  # Replace with your actual IP + /32
+# admin_access_cidr = "203.0.113.1/32"
+
+# Enable AWS Systems Manager for SSH access (recommended for dynamic IP)
+enable_ssm = true  # Set to false if you prefer traditional SSH
+
+# VPN client IP range (usually no need to change)
+vpn_cidr = "10.8.0.0/24"

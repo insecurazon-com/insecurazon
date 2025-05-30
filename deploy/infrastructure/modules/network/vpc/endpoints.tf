@@ -44,3 +44,16 @@ resource "aws_vpc_endpoint" "secretsmanager" {
     Name = "secretsmanager-vpc-endpoint"
   }
 }
+
+resource "aws_vpc_endpoint" "sts" {
+  count = var.vpc_config.sts_endpoint.add_endpoint ? 1 : 0
+  vpc_id              = aws_vpc.this.id
+  service_name        = "com.amazonaws.${var.region}.sts"
+  vpc_endpoint_type   = var.vpc_config.sts_endpoint.vpc_endpoint_type
+
+  subnet_ids          = [
+    for subnet in var.vpc_config.subnets : 
+    aws_subnet.this[subnet.name].id if subnet.allow_sts == true
+  ]
+}
+

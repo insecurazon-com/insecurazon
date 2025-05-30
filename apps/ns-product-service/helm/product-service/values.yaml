@@ -1,0 +1,53 @@
+replicaCount: 1
+
+image:
+  repository: insecurazon/product-service
+  tag: latest
+  pullPolicy: IfNotPresent
+
+nameOverride: ""
+fullnameOverride: ""
+
+service:
+  type: ClusterIP
+  port: 80
+  targetPort: 8080
+
+deployment:
+  containerPort: 8080
+
+resources:
+  limits:
+    cpu: 500m
+    memory: 512Mi
+  requests:
+    cpu: 100m
+    memory: 128Mi
+
+livenessProbe:
+  path: /health/live
+  initialDelaySeconds: 30
+  periodSeconds: 10
+
+readinessProbe:
+  path: /health/ready
+  initialDelaySeconds: 5
+  periodSeconds: 5
+
+# MongoDB Configuration
+mongodb:
+  # Option 1: Direct URI (if you want to provide the connection string directly)
+  uri: ""
+  
+  # Option 2: Secret-based configuration (if using Kubernetes secrets)
+  secretName: "mongodb-secret"
+  secretKey: "connection_string"
+  secret: ""  # Base64 encoded connection string
+  
+  # Option 3: CSI Driver configuration (if using AWS Secrets Manager)
+  secretProviderClass: ""  # Set to the name of your SecretProviderClass if using CSI driver
+  secretPath: "/mnt/secrets/mongodb/connection_string"  # Path where CSI driver will mount the secret
+
+environment:
+  - name: PORT
+    value: "8080" 

@@ -10,7 +10,7 @@ resource "aws_eks_cluster" "this" {
     aws_cloudwatch_log_group.this
   ]
   name     = var.eks_config.cluster_name
-  role_arn = var.eks_config.cluster_role_arn
+  role_arn = aws_iam_role.cluster.arn
   version  = var.eks_config.cluster_version != null ? var.eks_config.cluster_version : var.default_cluster_version
 
   vpc_config {
@@ -51,7 +51,7 @@ resource "aws_eks_node_group" "this" {
 
   cluster_name    = aws_eks_cluster.this.name
   node_group_name = each.value.name
-  node_role_arn   = var.eks_config.node_role_arn
+  node_role_arn   = var.eks_config.node_groups != null && length(var.eks_config.node_groups) > 0 ? aws_iam_role.node[0].arn : null
   subnet_ids      = each.value.subnet_ids != null ? each.value.subnet_ids : var.eks_config.subnet_ids
 
   ami_type       = each.value.ami_type
@@ -94,14 +94,14 @@ resource "aws_eks_fargate_profile" "this" {
 
   cluster_name           = aws_eks_cluster.this.name
   fargate_profile_name   = each.value.name
-  pod_execution_role_arn = var.eks_config.fargate_pod_execution_role_arn
+  pod_execution_role_arn = var.eks_config.fargate_profiles != null && length(var.eks_config.fargate_profiles) > 0 ? aws_iam_role.fargate[0].arn : null
   subnet_ids             = each.value.subnet_ids != null ? each.value.subnet_ids : var.eks_config.subnet_ids
 
   dynamic "selector" {
     for_each = each.value.selectors
     content {
       namespace = selector.value.namespace
-      labels    = selector.value.labels
+      labels    = selector.value.labels != null && length(selector.value.labels) > 0 ? selector.value.labels : null
     }
   }
 
@@ -112,3 +112,6 @@ resource "aws_eks_fargate_profile" "this" {
     }
   )
 }
+
+data "aws_region" "current" {}
+
