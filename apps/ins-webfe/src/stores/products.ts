@@ -3,7 +3,7 @@ import type { Product, Category } from '@/types'; // Import defined types
 import axios from 'axios';
 
 // Make sure API base URL is using the mock endpoints
-const API_BASE_URL = 'http://localhost:3000/mock';  // Ensure this matches the ProductController path
+const API_BASE_URL = 'http://localhost:3000';  // Ensure this matches the ProductController path
 
 // Mock data to use as fallback when API fails
 const MOCK_PRODUCTS: Product[] = [

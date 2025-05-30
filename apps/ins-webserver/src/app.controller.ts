@@ -15,7 +15,7 @@ export class AppController {
       path.join(__dirname, '../../ins-webfe/dist');
   }
 
-  // Proxy API requests to the backend EXCEPT /mock/products/* which are handled by ProductController
+  // Proxy API requests to the backend EXCEPT /products/* which are handled by ProductController
   @All('api/*')
   async proxyApiRequest(
     @Req() req: Request, 
@@ -32,11 +32,11 @@ export class AppController {
     return this.apiProxyService.forwardRequest(req, res);
   }
 
-  // Serve the Vue SPA for all other routes EXCEPT /mock/products paths
+  // Serve the Vue SPA for all other routes EXCEPT /products paths
   @Get('*')
   serveStaticFile(@Req() req: Request, @Res() res: Response, @Next() next: NextFunction) {
-    // Skip requests to /mock/products endpoints - let ProductController handle them
-    if (req.path.startsWith('/mock/products')) {
+    // Skip requests to /products endpoints - let ProductController handle them
+    if (req.path.startsWith('/products')) {
       console.log(`[DEBUG] Skipping SPA serving for ${req.path}, delegating to ProductController`);
       return next();
     }

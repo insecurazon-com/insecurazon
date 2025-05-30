@@ -1,0 +1,119 @@
+name: Deploy Pipeline
+
+permissions:
+  id-token: write
+  contents: read
+
+on:
+  push:
+    branches: [master]
+  workflow_dispatch:
+    inputs:
+      deploy_infra:
+        description: 'Deploy infrastructure'
+        required: false
+        type: boolean
+        default: false
+
+env:
+  TF_STATE_BUCKET: insecurazon-terraform-state-bucket
+  AWS_REGION: eu-central-1
+  DEPLOYMENT_ROLE_ARN: arn:aws:iam::767398092878:role/GitHubActions-DeploymentRole
+
+jobs:
+  # Job 1: Deploy Infrastructure
+  deploy-infrastructure:
+    runs-on: ubuntu-24.04
+    # Only run this job if explicitly triggered via workflow_dispatch with deploy_infra=true
+    # if: github.event_name == 'workflow_dispatch' && github.event.inputs.deploy_infra == 'true'
+    outputs:
+      s3_bucket: ${{ steps.terraform_outputs.outputs.s3_bucket }}
+      cloudfront_id: ${{ steps.terraform_outputs.outputs.cloudfront_id }}
+    
+    steps:
+      - uses: aws-actions/configure-aws-credentials@v4
+        with:
+          role-to-assume: ${{ env.DEPLOYMENT_ROLE_ARN }}
+          aws-region: ${{ env.AWS_REGION }}
+
+      - uses: actions/checkout@v4
+      
+      - uses: hashicorp/setup-terraform@v3
+      
+      - name: Terraform Init & Apply
+        run: |
+          cd deploy/infrastructure
+          terraform init -backend-config="bucket=${TF_STATE_BUCKET}"
+          terraform apply -auto-approve
+          
+      - name: Extract Terraform Outputs
+        id: terraform_outputs
+        run: |
+          cd deploy/infrastructure
+          echo "s3_bucket=$(terraform output -json storage_config | jq -r '.static_website_config.bucket_name')" >> $GITHUB_OUTPUT
+          echo "cloudfront_id=$(terraform output -json storage_config | jq -r '.static_website_config.cloudfront_id')" >> $GITHUB_OUTPUT
+
+  # Job 2: Build Applications
+  build-apps:
+    runs-on: ubuntu-24.04
+    needs: deploy-infrastructure
+    if: always() && (needs.deploy-infrastructure.result == 'success' || needs.deploy-infrastructure.result == 'skipped')
+    strategy:
+      matrix:
+        app: [ins-webfe]
+    
+    steps:
+      - uses: actions/checkout@v4
+      
+      - uses: pnpm/action-setup@v3
+        with:
+          version: 8
+      
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '18'
+          cache: 'pnpm'
+      
+      - name: Install Dependencies
+        run: pnpm install
+      
+      - name: Build Application
+        run: pnpm turbo run build --filter=${{ matrix.app }}
+      
+      - name: Upload Build Artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: ${{ matrix.app }}-build
+          path: apps/${{ matrix.app }}/dist/
+
+  # Job 3: Deploy ins-webfe to S3/CloudFront
+  deploy-ins-webfe:
+    runs-on: ubuntu-24.04
+    needs: [deploy-infrastructure, build-apps]
+    if: always() && needs.build-apps.result == 'success'
+    
+    steps:
+      - uses: actions/checkout@v4
+      
+      - uses: aws-actions/configure-aws-credentials@v4
+        with:
+          role-to-assume: ${{ env.DEPLOYMENT_ROLE_ARN }}
+          aws-region: ${{ env.AWS_REGION }}
+      
+      - name: Download ins-webfe Build
+        uses: actions/download-artifact@v4
+        with:
+          name: ins-webfe-build
+          path: apps/ins-webfe/dist/
+      
+      - name: Deploy to S3
+        run: |
+          chmod +x deploy/application/ins-webfe/deploy.sh
+          ./deploy/application/ins-webfe/deploy.sh "${{ needs.deploy-infrastructure.outputs.s3_bucket }}"
+      
+      - name: Invalidate CloudFront
+        if: needs.deploy-infrastructure.outputs.cloudfront_id != ''
+        run: |
+          aws cloudfront create-invalidation \
+            --distribution-id ${{ needs.deploy-infrastructure.outputs.cloudfront_id }} \
+            --paths "/*"

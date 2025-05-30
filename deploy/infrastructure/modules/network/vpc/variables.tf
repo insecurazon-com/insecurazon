@@ -14,31 +14,52 @@ variable "vpc_config" {
   type        = object({ 
     vpc_cidr      = string
     vpc_name      = string
-    igw = object({
+    igw = optional(object({
       add_igw = bool
+    }), {
+      add_igw = false
     })
     s3_endpoint = object({
       add_endpoint       = bool
     })
-    kms_endpoint = object({
+    kms_endpoint = optional(object({
       add_endpoint = bool
-      vpc_endpoint_type   = string
+      vpc_endpoint_type   = optional(string, "Interface")
       private_dns_enabled = bool
+    }), {
+      add_endpoint = false
+      private_dns_enabled = false
     })
-    secretsmanager_endpoint = object({
+    secretsmanager_endpoint = optional(object({
       add_endpoint        = bool
       private_dns_enabled = bool
-      vpc_endpoint_type   = string
+      vpc_endpoint_type   = optional(string, "Interface")
+    }), {
+      add_endpoint        = false
+      private_dns_enabled = false
+    })
+    sts_endpoint = optional(object({
+      add_endpoint        = bool
+      vpc_endpoint_type   = optional(string, "Interface")
+    }), {
+      add_endpoint        = false
+    })
+    nat_gateway = optional(object({
+      subnet_names = list(string)
+    }), {
+      subnet_names = []
     })
     subnets       = list(object({
-      public               = bool
+      name                 = string
       cidr                 = string
       availability_zone    = string
-      name                 = string
-      route_table_name     = string
-      add_route_table      = bool
-      allow_kms            = bool
-      allow_secretsmanager = bool
+      allow_kms            = optional(bool, false)
+      allow_secretsmanager = optional(bool, false)
     }))
   })
+}
+
+variable "transit_gateway_id" {
+  description = "The ID of the Transit Gateway"
+  type        = string
 }

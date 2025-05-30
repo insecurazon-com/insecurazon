@@ -1,13 +1,7 @@
-variable "module_depends_on" {
-  description = "Module dependencies"
-  type = list(any)
-  default = []
-}
-
 # Cluster IAM role
 resource "aws_iam_role" "cluster" {
   depends_on = [var.module_depends_on]
-  name = "${var.iam_eks.cluster_name}-cluster-role"
+  name = "${var.eks_config.cluster_name}-cluster-role"
 
   assume_role_policy = jsonencode({
     Version = "2012-10-17"
@@ -22,7 +16,7 @@ resource "aws_iam_role" "cluster" {
     ]
   })
 
-  tags = var.iam_eks.tags
+  tags = var.eks_config.tags
 }
 
 resource "aws_iam_role_policy_attachment" "cluster_AmazonEKSClusterPolicy" {
@@ -38,8 +32,8 @@ resource "aws_iam_role_policy_attachment" "cluster_AmazonEKSVPCResourceControlle
 # Node groups IAM role
 resource "aws_iam_role" "node" {
   depends_on = [var.module_depends_on]
-  count = var.iam_eks.node_enabled ? 1 : 0
-  name = "${var.iam_eks.cluster_name}-node-role"
+  count = var.eks_config.node_groups != null && length(var.eks_config.node_groups) > 0 ? 1 : 0
+  name = "${var.eks_config.cluster_name}-node-role"
 
   assume_role_policy = jsonencode({
     Version = "2012-10-17"
@@ -54,23 +48,23 @@ resource "aws_iam_role" "node" {
     ]
   })
 
-  tags = var.iam_eks.tags
+  tags = var.eks_config.tags
 }
 
 resource "aws_iam_role_policy_attachment" "node_AmazonEKSWorkerNodePolicy" {
-  count = var.iam_eks.node_enabled ? 1 : 0
+  count = var.eks_config.node_groups != null && length(var.eks_config.node_groups) > 0 ? 1 : 0
   policy_arn = "arn:aws:iam::aws:policy/AmazonEKSWorkerNodePolicy"
   role       = aws_iam_role.node[count.index].name
 }
 
 resource "aws_iam_role_policy_attachment" "node_AmazonEKS_CNI_Policy" {
-  count = var.iam_eks.node_enabled ? 1 : 0
+  count = var.eks_config.node_groups != null && length(var.eks_config.node_groups) > 0 ? 1 : 0
   policy_arn = "arn:aws:iam::aws:policy/AmazonEKS_CNI_Policy"
   role       = aws_iam_role.node[count.index].name
 }
 
 resource "aws_iam_role_policy_attachment" "node_AmazonEC2ContainerRegistryReadOnly" {
-  count = var.iam_eks.node_enabled ? 1 : 0
+  count = var.eks_config.node_groups != null && length(var.eks_config.node_groups) > 0 ? 1 : 0
   policy_arn = "arn:aws:iam::aws:policy/AmazonEC2ContainerRegistryReadOnly"
   role       = aws_iam_role.node[count.index].name
 }
@@ -78,8 +72,8 @@ resource "aws_iam_role_policy_attachment" "node_AmazonEC2ContainerRegistryReadOn
 # Fargate IAM role
 resource "aws_iam_role" "fargate" {
   depends_on = [var.module_depends_on]
-  count = var.iam_eks.fargate_enabled ? 1 : 0
-  name = "${var.iam_eks.cluster_name}-fargate-role"
+  count = var.eks_config.fargate_profiles != null && length(var.eks_config.fargate_profiles) > 0 ? 1 : 0
+  name = "${var.eks_config.cluster_name}-fargate-role"
 
   assume_role_policy = jsonencode({
     Version = "2012-10-17"
@@ -94,11 +88,64 @@ resource "aws_iam_role" "fargate" {
     ]
   })
 
-  tags = var.iam_eks.tags
+  tags = var.eks_config.tags
 }
 
 resource "aws_iam_role_policy_attachment" "fargate_pod_execution_role_policy" {
-  count = var.iam_eks.fargate_enabled ? 1 : 0
+  count = var.eks_config.fargate_profiles != null && length(var.eks_config.fargate_profiles) > 0 ? 1 : 0
   policy_arn = "arn:aws:iam::aws:policy/AmazonEKSFargatePodExecutionRolePolicy"
   role       = aws_iam_role.fargate[count.index].name
 } 
+
+# Lambda IAM role
+resource "aws_iam_role" "lambda" {
+  count = var.install_argocd ? 1 : 0
+  name  = "${var.eks_config.cluster_name}-argocd-installer"
+
+  assume_role_policy = jsonencode({
+    Version = "2012-10-17"
+    Statement = [
+      {
+        Action = "sts:AssumeRole"
+        Effect = "Allow"
+        Principal = {
+          Service = "lambda.amazonaws.com"
+        }
+      }
+    ]
+  })
+
+  tags = var.eks_config.tags
+}
+
+resource "aws_iam_role_policy" "lambda" {
+  count = var.install_argocd ? 1 : 0
+  name   = "${var.eks_config.cluster_name}-argocd-installer-policy"
+  role   = aws_iam_role.lambda[0].id
+  
+  policy = jsonencode({
+    Version = "2012-10-17",
+    Statement = [
+      {
+        Effect = "Allow",
+        Action = [
+          "logs:CreateLogGroup",
+          "logs:CreateLogStream",
+          "logs:PutLogEvents"
+        ],
+        Resource = "arn:aws:logs:*:*:*"
+      },
+      {
+        Effect = "Allow",
+        Action = [
+          "ec2:CreateNetworkInterface",
+          "ec2:DescribeNetworkInterfaces",
+          "ec2:DeleteNetworkInterface",
+          "ec2:AssignPrivateIpAddresses",
+          "ec2:UnassignPrivateIpAddresses"
+        ],
+        Resource = "*"
+      }
+    ]
+  })
+}

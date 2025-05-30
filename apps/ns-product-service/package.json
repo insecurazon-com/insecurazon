@@ -1,0 +1,15 @@
+{
+  "name": "ns-product-service",
+  "version": "0.1.0",
+  "private": true,
+  "scripts": {
+    "build": "go build -o ./bin/product-service ./cmd",
+    "docker:build": "docker build -t insecurazon/product-service:latest .",
+    "docker:up": "docker-compose up",
+    "docker:down": "docker-compose down",
+    "lint": "go vet ./...",
+    "helm:lint": "helm lint ./helm/product-service",
+    "helm:template": "helm template product-service ./helm/product-service",
+    "helm:install": "helm upgrade --install product-service ./helm/product-service"
+  }
+} 
