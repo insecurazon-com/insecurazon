@@ -42,13 +42,11 @@ output "vpc_config" {
     vpc_id = aws_vpc.this.id
     vpc_name = aws_vpc.this.tags.Name
     cidr_block = aws_vpc.this.cidr_block
-    nat_gateway = length(var.vpc_config.nat_gateway.subnet_names) > 0 ? {
-      id = aws_nat_gateway.this[0].id
-      subnet_id = aws_nat_gateway.this[0].subnet_id
-    } : null
+    main_route_table_id = aws_vpc.this.main_route_table_id
     nat_gateways = {
-      for i, nat_gw in aws_nat_gateway.this : var.vpc_config.nat_gateway.subnet_names[i] => {
+      for i, nat_gw in aws_nat_gateway.this : nat_gw.tags.Name => {
         id = nat_gw.id
+        name = nat_gw.tags.Name
         subnet_id = nat_gw.subnet_id
       }
     }

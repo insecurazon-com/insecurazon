@@ -1,11 +1,8 @@
-variable "vpc_id" {
-  type = string
-}
-
-variable "peer_vpc_id" {
-  type = string
-}
-
-variable "tags" {
-  type = map(string)
+variable "peering_config" {
+  type = object({
+    peering_name = string
+    vpc_id = string
+    peer_vpc_id = string
+    tags = map(string)
+  })
 }

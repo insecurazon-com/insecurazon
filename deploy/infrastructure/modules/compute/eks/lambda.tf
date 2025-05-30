@@ -1,5 +1,10 @@
 # Lambda function for ArgoCD installation
 data "archive_file" "lambda_zip" {
+  depends_on = [
+    aws_eks_cluster.this,
+    aws_eks_node_group.this,
+    aws_eks_fargate_profile.this
+  ]
   count       = var.install_argocd ? 1 : 0
   type        = "zip"
   source_dir  = "${path.module}/lambda"
@@ -7,6 +12,11 @@ data "archive_file" "lambda_zip" {
 }
 
 resource "null_resource" "prepare_lambda_layer" {
+  depends_on = [
+    aws_eks_cluster.this,
+    aws_eks_node_group.this,
+    aws_eks_fargate_profile.this
+  ]
   count = var.install_argocd ? 1 : 0
 
   triggers = {
@@ -78,7 +88,9 @@ resource "aws_lambda_function" "argocd_installer" {
   }
 
   depends_on = [
-    aws_eks_cluster.this
+    aws_eks_cluster.this,
+    aws_eks_node_group.this,
+    aws_eks_fargate_profile.this
   ]
 }
 
@@ -94,6 +106,8 @@ resource "aws_lambda_invocation" "argocd_installer" {
 
   depends_on = [
     aws_lambda_function.argocd_installer,
-    aws_eks_cluster.this
+    aws_eks_cluster.this,
+    aws_eks_node_group.this,
+    aws_eks_fargate_profile.this
   ]
 }

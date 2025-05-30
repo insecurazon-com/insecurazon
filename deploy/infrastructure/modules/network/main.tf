@@ -4,56 +4,77 @@ module "vpc" {
   region = var.region
   domain_name = var.domain_name
   vpc_config = each.value
-  transit_gateway_id = aws_ec2_transit_gateway.this.id
+  transit_gateway_id = var.transit_gateway_config.enabled ? aws_ec2_transit_gateway.this[0].id : null
 }
 
 locals {
-  nat_gateway = {
-    for vpc_name, vpc in module.vpc : vpc_name => vpc.vpc_config.nat_gateway
-    if vpc.vpc_config.nat_gateway != null
-  }[keys(module.vpc)[0]]
 
   internet_gateway = {
     for vpc_name, vpc in module.vpc : vpc_name => vpc.vpc_config.internet_gateway
     if vpc.vpc_config.internet_gateway != null
   }[keys(module.vpc)[0]]
 
-  routing_config = {
-    for routing in var.routing_config : "${routing.vpc_name}-${routing.subnet_name}" => {
+  peering_config = {
+    for peering in var.peering_config : peering.peering_name => {
+      # vpc_id = [ for vpc in module.vpc : vpc.vpc_config.vpc_id if vpc.vpc_config.vpc_name == peering.vpc_name ][0]
+      vpc_id = module.vpc[peering.vpc_name].vpc_config.vpc_id
+      # peer_vpc_id = [ for vpc in module.vpc : vpc.vpc_config.vpc_id if vpc.vpc_config.vpc_name == peering.peer_vpc_name ][0]
+      peer_vpc_id = module.vpc[peering.peer_vpc_name].vpc_config.vpc_id
+      vpc_name = peering.vpc_name
+      peering_name = peering.peering_name
+      tags = peering.tags
+    }
+  }
+
+  routing_config = [
+    for routing in var.routing_config : {
       vpc_id = module.vpc[routing.vpc_name].vpc_config.vpc_id
       vpc_name = routing.vpc_name
-      subnet_id = [ for subnet in module.vpc[routing.vpc_name].vpc_config.subnet : subnet.id if subnet.name == "${routing.vpc_name}-${routing.subnet_name}" ][0]
-      subnet_name = routing.subnet_name
+      subnet_ids = [ for subnet in module.vpc[routing.vpc_name].vpc_config.subnet : subnet.id if contains(routing.subnet_names, subnet.name) ]
+      name = routing.name
+      main_route_table = routing.main_route_table
+      main_route_table_id = module.vpc[routing.vpc_name].vpc_config.main_route_table_id 
       routes = [
         for route in routing.routes : {
           destination_cidr_block = route.destination_cidr_block
-          nat_gateway_id = route.gateway == "nat_gateway" ? (
-            # Find the appropriate NAT Gateway for this subnet based on availability zone
-            routing.vpc_name == "egress" && contains(["nat-1", "nat-2", "nat-3"], routing.subnet_name) ? 
-              module.vpc[routing.vpc_name].vpc_config.nat_gateways[routing.subnet_name].id :
-              local.nat_gateway.id
-          ) : ""
-          transit_gateway_id = route.gateway == "transit_gateway" ? aws_ec2_transit_gateway.this.id : ""
+          # nat_gateway_id = route.gateway == "nat_gateway" ? local.nat_gateway.id : ""
+          nat_gateway_id = startswith(route.gateway, "nat_gateway:") ? [
+            for nat_gateway in module.vpc[routing.vpc_name].vpc_config.nat_gateways : nat_gateway.id if "nat_gateway:${nat_gateway.name}" == route.gateway
+          ][0] : ""
+          transit_gateway_id = route.gateway == "transit_gateway" ? var.transit_gateway_config.enabled ? aws_ec2_transit_gateway.this[0].id : null : ""
           gateway_id = route.gateway == "internet_gateway" ? local.internet_gateway.id : ""
+          vpc_peering_connection_id = startswith(route.gateway, "peer:") ? [
+            for peering in module.peering : peering.peering_config.peering_id if "peer:${peering.peering_config.peering_name}" == route.gateway
+          ][0] : ""
         }
       ]
       associated_endpoints = []
     }
-  }
+  ]
 }
 
 module "routing" {
-  for_each = local.routing_config
+  count = length(local.routing_config)
   source = "./routing"
-  routing_config = each.value
+  routing_config = local.routing_config[count.index]
+}
+
+module "peering" {
+  for_each = local.peering_config
+  source = "./peering"
+  peering_config = each.value
 }
 
 output "vpc_config" {
   value = module.vpc
 }
 
+
 output "routing_config" {
   value = module.routing
+}
+output "local_routing_config" {
+  value = local.routing_config
 }
 
 output "client_vpn_enabled" {
@@ -62,8 +83,8 @@ output "client_vpn_enabled" {
 
 output "transit_gateway_config" {
   value = {
-    transit_gateway_id = aws_ec2_transit_gateway.this.id
-    route_table_id = aws_ec2_transit_gateway_route_table.this.id
+    transit_gateway_id = var.transit_gateway_config.enabled ? aws_ec2_transit_gateway.this[0].id : null
+    route_table_id = var.transit_gateway_config.enabled ? aws_ec2_transit_gateway_route_table.this[0].id : null
     routes = [
       for route in aws_ec2_transit_gateway_route.this : {
         destination_cidr_block = route.destination_cidr_block

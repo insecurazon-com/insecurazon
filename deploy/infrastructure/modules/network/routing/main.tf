@@ -34,12 +34,16 @@ variable "routing_config" {
   type = object({
     vpc_id = string
     vpc_name = string
-    subnet_id = string
-    subnet_name = string
+    main_route_table_id = string
+    subnet_ids = list(string)
+    name = string
+    main_route_table = bool
+    main_route_table_id = string
     routes = list(object({
       destination_cidr_block = string
       nat_gateway_id = string
       transit_gateway_id = string
+      vpc_peering_connection_id = string
       gateway_id = string
     }))
     associated_endpoints = list(string)
@@ -47,6 +51,7 @@ variable "routing_config" {
 }
 
 resource "aws_route_table" "this" {
+  count = var.routing_config.main_route_table == false ? 1 : 0
   vpc_id = var.routing_config.vpc_id
 
   dynamic "route" {
@@ -55,22 +60,39 @@ resource "aws_route_table" "this" {
       cidr_block = route.value.destination_cidr_block
       nat_gateway_id = route.value.nat_gateway_id != "" ? route.value.nat_gateway_id : null
       transit_gateway_id = route.value.transit_gateway_id != "" ? route.value.transit_gateway_id : null
+      vpc_peering_connection_id = route.value.vpc_peering_connection_id != "" ? route.value.vpc_peering_connection_id : null
       gateway_id = route.value.gateway_id != "" ? route.value.gateway_id : null
     }
   }
 
   tags = {
-    Name = "${var.routing_config.vpc_name}-${var.routing_config.subnet_name}"
+    Name = var.routing_config.name
   }
 }
 
+resource "aws_route" "this" {
+  count = var.routing_config.main_route_table ? length(var.routing_config.routes) : 0
+  route_table_id = var.routing_config.main_route_table_id
+  destination_cidr_block = var.routing_config.routes[count.index].destination_cidr_block
+  gateway_id = var.routing_config.routes[count.index].gateway_id != "" ? var.routing_config.routes[count.index].gateway_id : null
+  transit_gateway_id = var.routing_config.routes[count.index].transit_gateway_id != "" ? var.routing_config.routes[count.index].transit_gateway_id : null
+  vpc_peering_connection_id = var.routing_config.routes[count.index].vpc_peering_connection_id != "" ? var.routing_config.routes[count.index].vpc_peering_connection_id : null
+  nat_gateway_id = var.routing_config.routes[count.index].nat_gateway_id != "" ? var.routing_config.routes[count.index].nat_gateway_id : null
+}
+
 resource "aws_route_table_association" "this" {
-  subnet_id      = var.routing_config.subnet_id
-  route_table_id = aws_route_table.this.id
+  count = length(var.routing_config.subnet_ids)
+  subnet_id      = var.routing_config.subnet_ids[count.index]
+  route_table_id = var.routing_config.main_route_table == true ? var.routing_config.main_route_table_id : aws_route_table.this[0].id
 }
 
 resource "aws_vpc_endpoint_route_table_association" "this" {
   count = length(var.routing_config.associated_endpoints)
-  route_table_id = aws_route_table.this.id
+  route_table_id = var.routing_config.main_route_table ? var.routing_config.main_route_table_id : var.routing_config.main_route_table_id
   vpc_endpoint_id = var.routing_config.associated_endpoints[count.index]
+}
+
+
+output "route_table" {
+  value = aws_route_table.this
 }

@@ -17,7 +17,7 @@ resource "aws_nat_gateway" "this" {
   ][0]
 
   tags = {
-    Name = "${var.vpc_config.vpc_name}-nat"
+    Name = "${var.vpc_config.vpc_name}-${var.vpc_config.nat_gateway.subnet_names[count.index]}"
   }
 
   depends_on = [aws_internet_gateway.this]

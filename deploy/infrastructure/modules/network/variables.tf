@@ -14,21 +14,35 @@ variable "network_config" {
     vpc = map(object({
       vpc_cidr      = string
       vpc_name      = string
-      igw = object({
+      igw = optional(object({
         add_igw = bool
+      }), {
+        add_igw = false
       })
       s3_endpoint = object({
         add_endpoint       = bool
       })
-      kms_endpoint = object({
+      kms_endpoint = optional(object({
         add_endpoint = bool
-        vpc_endpoint_type   = string
+        vpc_endpoint_type   = optional(string, "Interface")
         private_dns_enabled = bool
+      }), {
+        add_endpoint = false
+        private_dns_enabled = false
       })
-      secretsmanager_endpoint = object({
+      secretsmanager_endpoint = optional(object({
         add_endpoint = bool
-        vpc_endpoint_type   = string
+        vpc_endpoint_type   = optional(string, "Interface")
         private_dns_enabled = bool
+      }), {
+        add_endpoint        = false
+        private_dns_enabled = false
+      })
+      sts_endpoint = optional(object({
+        add_endpoint        = bool
+        vpc_endpoint_type   = optional(string, "Interface")
+      }), {
+        add_endpoint        = false
       })
       nat_gateway = object({
         subnet_names = list(string)
@@ -37,19 +51,31 @@ variable "network_config" {
         name              = string
         cidr              = string
         availability_zone = string
-        default_route     = string
-        allow_kms         = bool
-        allow_secretsmanager = bool
+        allow_kms         = optional(bool, false)
+        allow_secretsmanager = optional(bool, false)
       }))
     }))
   })
 }
 
+variable "peering_config" {
+  description = "Map of peering configurations"
+  type = map(object({
+    peering_name = string
+    vpc_name = string
+    peer_vpc_name = string
+    tags = map(string)
+  }))
+  default = {}
+}
+
 variable "routing_config" {
   description = "Map of routing configurations"
-  type        = list(object({
+  type        = map(object({
     vpc_name = string
-    subnet_name = string
+    name = string
+    main_route_table = bool
+    subnet_names = list(string)
     routes = list(object({
       destination_cidr_block = string
       gateway = string
@@ -73,17 +99,19 @@ variable "nat_routing_config" {
 }
 
 variable "transit_gateway_config" {
-type = object({
-  attachments = map(object({
-    vpc_name = string
-    subnets = list(string)
-    appliance_mode_support = string
-  }))
-  routes = list(object({
-    destination_cidr_block = string
-    transit_gateway_attachment = string
-  }))
-})
+  type = object({
+    enabled = optional(bool, false)
+    attachments = optional(map(object({
+      vpc_name = string
+      subnets = list(string)
+      appliance_mode_support = string
+    })), {})
+    routes = optional(list(object({
+      destination_cidr_block = string
+      transit_gateway_attachment = string
+    })), [])
+  })
+  default = { }
 }
 
 variable "client_vpn_config" {
